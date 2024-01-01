@@ -87,9 +87,9 @@ class DatabaseUtility {
 
         return $rows;
     }
-    public function construct_insert_query($table_name, $field_names, $submitted_data) {
-        $nonEmptyFields = array_filter($field_names, function($field) {
-            return $_POST[$field] !== '';
+    public function construct_insert_query($table_name, $field_names, $submitted_data, $data) {
+        $nonEmptyFields = array_filter($field_names, function($field) use ($data) {
+            return $data[$field] !== '';
         });
         $fields_string = implode(', ', $nonEmptyFields);
         

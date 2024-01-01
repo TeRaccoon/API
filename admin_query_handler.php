@@ -65,6 +65,7 @@ function construct_table($all_databases) {
     $table_columns = $all_databases->get_columns($table_name);
     foreach ($table_columns as $key => $column) {
         $formatted_names[] = $column['Comment'];
+        $data_types[] = $column['Type'];
         if ($column['Extra'] == null) {
             $edittable_display_names[] = $column['Comment'];
             $edittable_data_types[] = $column['Type'];
@@ -84,6 +85,7 @@ function construct_table($all_databases) {
         'display_data' => $display_data,
         'display_names' => $formatted_names,
         'data' => $table_data,
+        'types' => $data_types,
         'edittable' => [
             'columns' => $edittable_columns,
             'fields' => $edittable_field_names,
@@ -156,7 +158,7 @@ function get_display_data($data, $table_name, $all_databases) {
 
             if ($assoc_table_data != null) {
                 foreach($display_data as $key => $data_item) {
-                    if (array_key_exists($display_data[$key][$assoc_column], $assoc_table_data)) {
+                    if (array_key_exists($assoc_column, $display_data[$key]) && array_key_exists($display_data[$key][$assoc_column], $assoc_table_data)) {
                         $display_data[$key][$assoc_column] = $assoc_table_data[$display_data[$key][$assoc_column]];
                     }
                 }

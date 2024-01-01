@@ -24,7 +24,7 @@ require_once 'error-handler.php';
 $input_data = file_get_contents("php://input");
 $data = json_decode($input_data, true);
 
-$_POST['id'] = $data['id'];
+$_POST['id'] = isset($data['id']) ? $data['id'] : '';
 $_POST['action'] = $data['action'];
 
 if (isset($data['action'])) {
@@ -34,7 +34,8 @@ if (isset($data['action'])) {
     $database->connect(false);
 
     $database_utility = new DatabaseUtility($database);
-    $user_database = new UserDatabase($database, $database_utility);
+    $user_database = new UserDatabase($database_utility);
+    $customer_database = new CustomerDatabase($database_utility);
 
     switch ($data['action']) {
         case 'add':
@@ -42,7 +43,7 @@ if (isset($data['action'])) {
             break;
 
         case 'append':
-            append($database, $database_utility, $user_database, $data);
+            append($database, $database_utility, $user_database, $customer_database, $data);
             break;
 
         case 'delete':
@@ -54,7 +55,8 @@ if (isset($data['action'])) {
             break;
     }
     if ($_POST['action'] != 'login') {
-        header("Location: {$_SERVER["HTTP_REFERER"]}");
+        echo "Ruh roh";
+        exit();
     }
     $database->close_connection();
     var_dump($_SESSION);
@@ -67,10 +69,10 @@ else {
 }
 
 function insert($conn, $database_utility, $data) {
-    $table_name = $_POST['table_name'];
+    $table_name = $data['table_name'];
     $field_names = get_field_names($conn, $table_name);
     $submitted_data = construct_submitted_data($database_utility, $field_names, $table_name, $data);
-    $query = $database_utility->construct_insert_query($table_name, $field_names, $submitted_data);
+    $query = $database_utility->construct_insert_query($table_name, $field_names, $submitted_data, $data);
 
     handle_image($table_name);
 
@@ -79,9 +81,12 @@ function insert($conn, $database_utility, $data) {
     
     synchronise($conn, $table_name, null, null);
 }
-function append($conn, $database_utility, $user_database, $data) {
-    if ($data['table_name'] == 'users' || $data['table_name'] == 'customers') {
-        append_user($user_database, $data['username']);
+function append($conn, $database_utility, $user_database, $customer_database, $data) {
+    if ($data['table_name'] == 'users') {
+        $data = append_user($user_database, $data['username'], $data);
+    }
+    if ($data['table_name'] == 'customers') {
+        $data = append_customer($customer_database, $data['id'], $data);
     }
 
     $table_name = $data['table_name'];
@@ -120,13 +125,26 @@ function handle_image($table_name) {
         }
     }
 }
-function append_user($user_database, $username) {
+function append_user($user_database, $username, $data) {
     $current_password = $user_database -> get_user_password($username);
 
-    if ($current_password != $_POST['password']) {
-        $_POST['password'] = password_hash($_POST['password'], PASSWORD_BCRYPT, ['cost' => 10]);
+    if ($current_password != $data['password']) {
+        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 10]);
     }
+
+    return $data;
 }
+
+function append_customer($customer_database, $customer_id, $data) {
+    $current_password = $customer_database->get_customer_password($customer_id);
+
+    if ($current_password != $data['password']) {
+        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 10]);
+    }
+
+    return $data;
+}
+
 function drop($conn, $table_name, $ids) {
     if (str_contains($ids, ",")) {
         $ids = rtrim($ids, ',');
@@ -196,6 +214,7 @@ function synchronise($conn, $table_name, $id, $query_string) {
         default:
             if (!$conn -> commit()) {
                 ErrorHandler::set_error('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!', 'other', 'F_SQL-MD-0003', $conn->error);
+                echo "Ruh roh";
             }
             break;
     }

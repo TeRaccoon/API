@@ -90,6 +90,15 @@ class CustomerDatabase {
     public function __construct($db_utility) {
         $this->db_utility = $db_utility;
     }
+
+    function get_customer_password($id) {
+        $query = 'SELECT password FROM customers WHERE id = ?';
+        $params = [
+            ['type' => 's', 'value' => $id]
+        ];
+        $password_hash = $this->db_utility->execute_query($query, $params, 'assoc-array')['password'];
+        return $password_hash;
+    }
     function get_customer_discount($customer_id) {
         $query = 'SELECT discount FROM customers WHERE id = ?';
         $params = [
