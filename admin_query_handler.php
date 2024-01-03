@@ -26,6 +26,7 @@ function run_query() {
     $image_locations_database = new ImageLocationsDatabase($database_utility);
     $page_sections_database = new PageSectionsDatabase($database_utility);
     $retail_user_database = new RetailUserDatabase($database_utility);
+    $ledger_database = new LedgerDatabase($database_utility);
 
     $conn->connect();
     $results = null;
@@ -48,6 +49,10 @@ function run_query() {
 
         case "new-customers":
             $results = $customer_database->get_new_customers();
+            break;
+
+        case "account-balances":
+            $results = $ledger_database->get_account_balance($_GET['start-date'], $_GET['end-date']);
             break;
     }
     echo json_encode($results);

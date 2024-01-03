@@ -197,7 +197,7 @@ function execute_query() {
         case 'sales_revenue':
             $startDate = $_GET['startDate'];
             $endDate = $_GET['endDate'];
-            $results = $conn->query("SELECT SUM(ii.quantity * it.list_price) * (1 - c.discount / 100) AS total_profit FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id INNER JOIN invoiced_items AS ii ON i.id = ii.invoice_id INNER JOIN items AS it ON ii.item_id = it.id WHERE ii.created_at >= '".$startDate."' AND ii.created_at <= '".$endDate."' GROUP BY c.discount");
+            $results = $conn->query("SELECT SUM(ii.quantity * it.retail_price_price) * (1 - c.discount / 100) AS total_profit FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id INNER JOIN invoiced_items AS ii ON i.id = ii.invoice_id INNER JOIN items AS it ON ii.item_id = it.id WHERE ii.created_at >= '".$startDate."' AND ii.created_at <= '".$endDate."' GROUP BY c.discount");
             echo handle_data("ASSOC", $results, null);
             break;
         case 'sales_cost':

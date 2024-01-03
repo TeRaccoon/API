@@ -119,7 +119,7 @@ WHERE
 function get_invoice_products($conn, $invoice_id) {
   $query_string = "SELECT
   items.item_name,
-  items.list_price,
+  items.retail_price,
   invoiced_items.quantity,
   invoiced_items.vat_charge
   FROM
@@ -236,7 +236,7 @@ function get_item_totals($conn) {
 }
 
 function get_top_items($conn, $echo) {
-  $results = get_row_contents($conn, "SELECT items.item_name, COUNT(*) AS total_count, SUM(invoiced_items.quantity) AS total_quantity, items.unit_cost, items.list_price FROM invoiced_items JOIN items ON items.id = invoiced_items.item_id GROUP BY items.item_name, items.unit_cost, items.list_price ORDER BY total_quantity DESC;");
+  $results = get_row_contents($conn, "SELECT items.item_name, COUNT(*) AS total_count, SUM(invoiced_items.quantity) AS total_quantity, items.unit_cost, items.retail_price FROM invoiced_items JOIN items ON items.id = invoiced_items.item_id GROUP BY items.item_name, items.unit_cost, items.retail_price ORDER BY total_quantity DESC;");
   $top_items = force_length_jagged($results, 5);
   if ($echo) {
     echo json_encode($top_items);
@@ -245,7 +245,7 @@ function get_top_items($conn, $echo) {
 }
 
 function get_invoices_for_items($conn) {
-  $results = get_row_contents($conn, "SELECT items.item_name, COUNT(*) AS total_count, SUM(invoiced_items.quantity) AS total_quantity, items.unit_cost, items.list_price FROM invoiced_items JOIN items ON items.id = invoiced_items.item_id GROUP BY items.item_name, items.unit_cost, items.list_price ORDER BY total_quantity DESC;");
+  $results = get_row_contents($conn, "SELECT items.item_name, COUNT(*) AS total_count, SUM(invoiced_items.quantity) AS total_quantity, items.unit_cost, items.retail_price FROM invoiced_items JOIN items ON items.id = invoiced_items.item_id GROUP BY items.item_name, items.unit_cost, items.retail_price ORDER BY total_quantity DESC;");
   return $results;
 }
 
@@ -280,7 +280,7 @@ function get_month_profit($conn, $echo) {
   for ($i = 0; $i < 12; $i++) {
     $results[] = get_row_contents($conn, "SELECT 
     c.discount,
-    SUM((ii.quantity * (it.list_price - it.unit_cost))) AS profit
+    SUM((ii.quantity * (it.retail_price - it.unit_cost))) AS profit
     FROM
         invoices AS i
         INNER JOIN customers AS c ON i.customer_id = c.id

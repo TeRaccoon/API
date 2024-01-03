@@ -223,13 +223,21 @@ class CustomerPaymentsDatabase {
     }
 }
 
-class InvoicedItemsDatabase {
-    private $conn;
+class LedgerDatabase {
     private $db_utility;
 
-    public function __construct($conn, $db_utility) {
-        $this->conn = $conn;
+    public function __construct($db_utility) {
         $this->db_utility = $db_utility;
+    }
+
+    public function get_account_balance($startDate, $endDate) {
+        $query = 'SELECT account_code, SUM(debit) AS total_debit, SUM(credit) AS total_credit, SUM(debit) - SUM(credit) AS balance FROM general_ledger WHERE date >= ? AND date <= ? GROUP BY account_code';
+        $params = [
+            ['type' => 's', 'value' => $startDate],
+            ['type' => 's', 'value' => $endDate]
+        ];
+        $account_balance = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $account_balance;
     }
 }
 
