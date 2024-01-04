@@ -54,6 +54,18 @@ function run_query() {
         case "account-balances":
             $results = $ledger_database->get_account_balance($_GET['start-date'], $_GET['end-date']);
             break;
+
+        case "creditor":
+            $results = $invoice_database->get_creditor_data($_GET['start-day'], $_GET['end-day']);
+            break;
+
+        case "debtor":
+            if ($_GET['end-day'] != "null") {
+                $results = $invoice_database->get_debtor_data($_GET['start-day'], $_GET['end-day']);
+            } else {
+                $results = $invoice_database->get_debtor_data_limitless($_GET['start-day']);
+            }
+            break;
     }
     echo json_encode($results);
 }

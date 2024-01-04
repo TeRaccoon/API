@@ -402,6 +402,45 @@ class InvoiceDatabase {
         $this->db_utility = $db_utility;
     }
 
+    public function get_debtor_data($startDay, $endDay) {
+        $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount, MAX(i.created_at) AS latest_created_at
+        FROM invoices AS i
+        INNER JOIN customers AS c ON i.customer_id = c.id
+        WHERE i.payment_status = "No" AND i.created_at >= (CURDATE()) - INTERVAL ? DAY AND i.created_at <= (CURDATE()) - INTERVAL ? DAY AND i.due_date < (CURDATE())
+        GROUP BY c.id';        
+        
+        $params = [
+            ['type' => 'i', 'value' => $endDay],
+            ['type' => 'i', 'value' => $startDay]
+        ];
+        $debtor_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $debtor_data;
+    }
+
+    public function get_debtor_data_limitless($startDay) {
+        $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount, MAX(i.created_at) AS latest_created_at
+        FROM invoices AS i
+        INNER JOIN customers AS c ON i.customer_id = c.id
+        WHERE i.payment_status = "No" AND i.created_at < (CURDATE()) - INTERVAL ? DAY AND i.due_date < (CURDATE())
+        GROUP BY c.id';
+
+        $params = [
+            ['type' => 's', 'value' => $startDay]
+        ];
+        $debtor_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $debtor_data;
+    }
+
+    public function get_creditor_data($startDay, $endDay) {
+        $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.created_at >= curdate() - INTERVAL ? DAY AND i.created_at < curdate() - INTERVAL ? DAY AND i.customer_id = c.id AND i.payment_status = "No" AND i.due_date < curdate() GROUP BY c.id';
+        $params = [
+            ['type' => 's', 'value' => $endDay],
+            ['type' => 's', 'value' => $startDay]
+        ];
+        $creditor_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $creditor_data;
+    }
+
     public function get_total_invoices_month() {
         $query = 'SELECT COUNT(*) AS count FROM invoices WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())';
         $invoice_count = $this->db_utility->execute_query($query, null, 'assoc-array')['count'];
