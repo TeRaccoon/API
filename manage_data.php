@@ -51,7 +51,7 @@ if (isset($data['action'])) {
             break;
 
         case 'login':
-            login($user_database);
+            login($user_database, $data);
             break;
     }
     if ($_POST['action'] != 'login') {
@@ -274,21 +274,19 @@ function get_row_contents($conn, $query_string) {
     return $contents;
 }
 
-function login($user_database) {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+function login($user_database, $data) {
+    $username = $data['username'];
+    $password = $data['password'];
 
     $password_hash = $user_database->get_user_password($username);
-    if ($password_hash == null || !password_verify($password, $password_hash)) {
-        $_SESSION['login_error'] =  "Error: The username or password is invalid!";
-        header("Location: {$_SERVER["HTTP_REFERER"]}");
+    if ($password_hash != null && password_verify($password, $password_hash)) {
+        $response = array('success' => true, 'message' => 'Login successful');
     }
     else {
-        $_SESSION['logged_in'] = true;
-        $access_level = $user_database->get_access_level($username);
-        $_SESSION['access_level'] = $access_level;
-        header("Location: ../welcome.php");
+        $response = array('success' => false, 'message' => 'Invalid credentials');
     }
+    echo json_encode($response);
+    exit();
   }
   function create_account($user_database) {
     require 'dbh.php';
