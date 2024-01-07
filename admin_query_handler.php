@@ -67,6 +67,10 @@ function run_query() {
             }
             break;
 
+        case "profit-loss":
+            $results = $all_databases->get_profit_loss($_GET['start-date'], $_GET['end-date']);
+            break;
+
         case "invoices-due":
             $age = urldecode($_GET['filter']);
             $results = $invoice_database->get_invoices_due($age);

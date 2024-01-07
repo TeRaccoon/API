@@ -82,6 +82,42 @@ class AllDatabases {
         }
         return $data;
     }
+
+    function get_profit_loss($startDate, $endDate) {
+        $query = 'SELECT
+        total_profit,
+        total_cost,
+        total_profit - total_cost AS gross_profit,
+        total_expenses,
+        total_profit - total_expenses - total_cost AS net_profit
+    FROM
+        (
+            SELECT
+                c.discount,
+                SUM(ii.quantity * it.retail_price * (1 - c.discount / 100)) AS total_profit,
+                SUM(ii.quantity * it.unit_cost) AS total_cost,
+                (SELECT SUM(amount) FROM payments WHERE (category = "Expense" OR category = "Salary") AND date BETWEEN ? AND ?) AS total_expenses
+            FROM
+                invoices AS i
+                INNER JOIN customers AS c ON i.customer_id = c.id
+                INNER JOIN invoiced_items AS ii ON i.id = ii.invoice_id
+                INNER JOIN items AS it ON ii.item_id = it.id
+            WHERE
+                ii.created_at BETWEEN ? AND ?
+            GROUP BY
+                c.discount
+        ) AS derived_table';
+
+        $params = [
+            ['type' => 's', 'value' => $startDate],
+            ['type' => 's', 'value' => $endDate],
+            ['type' => 's', 'value' => $startDate],
+            ['type' => 's', 'value' => $endDate],
+        ];
+
+        $profit_loss_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $profit_loss_data;
+    }
 }
 
 class CustomerDatabase {
