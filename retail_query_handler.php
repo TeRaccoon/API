@@ -1,13 +1,28 @@
 <?php
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+    header("Access-Control-Max-Age: 3600");
+    exit;
+}
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET,POST,PUT,DELETE");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
+
+$input_data = file_get_contents("php://input");
+$data = json_decode($input_data, true);
     
 if (isset($_GET["query"])) {
     run_query();
+}
+
+if (isset($data["query"])) {
+    run_query_post($data);
 }
 
 function collect_data() {
@@ -15,6 +30,33 @@ function collect_data() {
     $filter = $_GET["filter"];
     $results = $conn -> query("SELECT * FROM retail_items WHERE ".$filter);
     echo json_encode($results -> fetch_all(MYSQLI_ASSOC));
+}
+
+function run_query_post($data) {
+    require_once 'dbh.php';
+    require_once 'database_utility.php';
+    require_once 'database_functions.php';
+
+    $query = $data['query'];
+
+    $conn = new DatabaseConnection();
+    $database_utility = new DatabaseUtility($conn);
+    $retail_items_database = new RetailItemsDatabase($database_utility);
+    $image_locations_database = new ImageLocationsDatabase($database_utility);
+    $page_sections_database = new PageSectionsDatabase($database_utility);
+    $retail_user_database = new RetailUserDatabase($database_utility);
+    $customer_database = new CustomerDatabase($database_utility);
+
+    $conn->connect();
+    $results = null;
+    switch ($query) {
+        case 'login':
+            $email = $data['userData']['email'];
+            $password = $data['userData']['password'];
+            $results = login($retail_user_database, $customer_database, $email, $password);
+            break;
+    }
+    echo json_encode($results);
 }
 function run_query() {    
     require_once 'dbh.php';
@@ -29,6 +71,7 @@ function run_query() {
     $image_locations_database = new ImageLocationsDatabase($database_utility);
     $page_sections_database = new PageSectionsDatabase($database_utility);
     $retail_user_database = new RetailUserDatabase($database_utility);
+    $customer_database = new CustomerDatabase($database_utility);
 
     $conn->connect();
     $results = null;
@@ -98,21 +141,20 @@ function run_query() {
             $results = $retail_items_database->get_product_from_name($product_name);
             break;
 
-        case 'login':
-            $email = $_POST['email'];
-            $password = $_POST['password'];
-            login($retail_user_database, $email, $password);
+        case "user-details":
+            $user_id = urldecode($_GET['filter']);
+            $results = $customer_database->get_customer_details($user_id);
             break;
     }
     echo json_encode($results);
 }
 
-function login($retail_user_database, $email, $password) {
+function login($retail_user_database, $customer_database, $email, $password) {
     $password_hash = $retail_user_database->get_password($email, $password);
     if ($password_hash == null || !password_verify($password, $password_hash)) { 
         return 'Username or password is incorrect!';
     } else {
-        return 'true';
+        return $customer_database->get_customer_id_from_email($email);
     }
 }
 ?>

@@ -99,6 +99,25 @@ class CustomerDatabase {
         $password_hash = $this->db_utility->execute_query($query, $params, 'assoc-array')['password'];
         return $password_hash;
     }
+
+    function get_customer_details($id) {
+        $query = 'SELECT forename, surname, email, phone_number_primary, phone_number_secondary FROM customers WHERE id = ?';
+        $params = [
+            ['type' => 's', 'value' => $id]
+        ];
+        $details = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $details;
+    }
+
+    function get_customer_id_from_email($email) {
+        $query = 'SELECT id FROM customers WHERE email = ?';
+        $params = [
+            ['type' => 's', 'value' => $email]
+        ];
+        $id = $this->db_utility->execute_query($query, $params,  'assoc-array')['id'];
+        return $id;
+    }
+
     function get_customer_discount($customer_id) {
         $query = 'SELECT discount FROM customers WHERE id = ?';
         $params = [
@@ -400,6 +419,15 @@ class InvoiceDatabase {
 
     public function __construct($db_utility) {
         $this->db_utility = $db_utility;
+    }
+
+    public function get_invoices_due($age) {
+        $query = 'SELECT id, title FROM invoices WHERE due_date >= DATE_SUB(NOW(), INTERVAL ? DAY)';
+        $params = [
+            ['type' => 'i', 'value' => $age]
+        ];
+        $invoice_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $invoice_data;
     }
 
     public function get_debtor_data($startDay, $endDay) {

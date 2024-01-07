@@ -66,6 +66,11 @@ function run_query() {
                 $results = $invoice_database->get_debtor_data_limitless($_GET['start-day']);
             }
             break;
+
+        case "invoices-due":
+            $age = urldecode($_GET['filter']);
+            $results = $invoice_database->get_invoices_due($age);
+            break;
     }
     echo json_encode($results);
 }
