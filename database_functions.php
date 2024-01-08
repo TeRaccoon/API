@@ -457,6 +457,15 @@ class InvoiceDatabase {
         $this->db_utility = $db_utility;
     }
 
+    public function get_month_totals($year) {
+        $query = 'SELECT YEAR(created_at) AS year, MONTH(created_at) AS month, SUM(total) AS total_amount FROM invoices WHERE YEAR(created_at) = ? GROUP BY YEAR(created_at), MONTH(created_at)';
+        $params = [
+            ['type' => 'i', 'value' => $year]
+        ];
+        $invoice_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $invoice_data;
+    }
+
     public function get_invoices_due($age) {
         $query = 'SELECT id, title FROM invoices WHERE due_date >= DATE_SUB(NOW(), INTERVAL ? DAY)';
         $params = [

@@ -75,6 +75,11 @@ function run_query() {
             $age = urldecode($_GET['filter']);
             $results = $invoice_database->get_invoices_due($age);
             break;
+
+        case "invoice-month-totals":
+            $year = urldecode($_GET['filter']);
+            $results = $invoice_database->get_month_totals($year);
+            break;
     }
     echo json_encode($results);
 }
