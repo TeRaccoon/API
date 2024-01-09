@@ -211,7 +211,7 @@ class ItemDatabase {
         return $total_sold ?? 0;
     }
     function get_list_price($item_id) {
-        $query = 'SELECT list_price FROM items WHERE id = ?';
+        $query = 'SELECT retail_price FROM items WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $item_id]
         ];
@@ -219,7 +219,7 @@ class ItemDatabase {
         return $list_price;
     }
     function get_invoiced_item_total($invoiced_item_id) {
-        $query = 'SELECT (ii.quantity * i.list_price) AS invoiced_item_total FROM invoiced_items AS ii INNER JOIN items AS i ON ii.item_id = i.id WHERE ii.id = ?';
+        $query = 'SELECT (ii.quantity * i.retail_price) AS invoiced_item_total FROM invoiced_items AS ii INNER JOIN items AS i ON ii.item_id = i.id WHERE ii.id = ?';
         $params = [
             ['type' => 'i', 'value' => $invoiced_item_id]
         ];
@@ -227,7 +227,7 @@ class ItemDatabase {
         return $invoiced_item_total;
     }
     function get_invoice_total($invoice_id) {
-        $query = 'SELECT SUM(invoiced_items.quantity * items.list_price) AS total FROM invoiced_items INNER JOIN items ON item_id = items.id WHERE invoice_id = ?';
+        $query = 'SELECT SUM(invoiced_items.quantity * items.retail_price) AS total FROM invoiced_items INNER JOIN items ON item_id = items.id WHERE invoice_id = ?';
         $params = [
             ['type' => 'i', 'value' =>  $invoice_id]
         ];
@@ -455,6 +455,52 @@ class InvoiceDatabase {
 
     public function __construct($db_utility) {
         $this->db_utility = $db_utility;
+    }
+
+    public function get_total_invoices_month_profit($month, $year) {
+        $query = 'SELECT 
+        COUNT(*) AS total_invoices,
+        SUM(total) AS month_total,
+        (
+            SELECT 
+                COALESCE(SUM(total), 0) 
+            FROM invoices 
+            WHERE payment_status = "Yes" 
+                AND MONTH(created_at) = ? 
+                AND YEAR(created_at) = ?
+        ) - (
+            SELECT 
+                COALESCE(SUM(ii.quantity * items.unit_cost), 0) AS total_cost 
+            FROM invoiced_items AS ii 
+            JOIN items ON ii.item_id = items.id 
+            JOIN invoices AS i ON ii.invoice_id = i.id  
+            WHERE MONTH(i.created_at) = ? 
+                AND YEAR(i.created_at) = ?
+        ) AS invoice_profit
+    FROM invoices 
+    WHERE payment_status = "Yes" 
+        AND MONTH(created_at) = ?
+        AND YEAR(created_at) = ?';
+        $params = [
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year]
+        ];
+        $invoice_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $invoice_data;
+    }
+
+    public function get_item_month_totals($month, $year) {
+        $query = 'SELECT items.item_name, SUM(invoiced_items.quantity) AS total_quantity FROM items JOIN invoiced_items ON items.id = invoiced_items.item_id JOIN invoices ON invoices.id = invoiced_items.invoice_id WHERE MONTH(invoices.created_at) = ? AND YEAR(invoices.created_at) = ? GROUP BY items.id, items.item_name';
+        $params = [
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year]
+        ];
+        $item_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $item_data;
     }
 
     public function get_month_totals($year) {
