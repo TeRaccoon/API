@@ -88,6 +88,16 @@ function run_query() {
         case "invoiced-item-month-totals":
             $results = $invoice_database->get_item_month_totals($_GET['month'], $_GET['year']);
             break;
+
+        case "invoice-info":
+            $invoice_id = urldecode($_GET['filter']);
+            $results = $invoice_database->get_invoice_info($invoice_id);
+            break;
+
+        case "invoice-products":
+            $invoice_id = urldecode($_GET['filter']);
+            $results = $invoice_database->get_invoice_products($invoice_id);
+            break;
     }
     echo json_encode($results);
 }

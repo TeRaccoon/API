@@ -457,6 +457,62 @@ class InvoiceDatabase {
         $this->db_utility = $db_utility;
     }
 
+    public function get_invoice_info($invoice_id) {
+        $query = 'SELECT
+        invoices.title,
+        invoices.due_date,
+        invoices.net_value,
+        invoices.total,
+        invoices.vat,
+        invoices.delivery_date,
+        invoices.created_at,
+        customers.forename,
+        customers.surname,
+        customers.outstanding_balance,
+        customer_address.invoice_address_one,
+        customer_address.invoice_address_two,
+        customer_address.invoice_address_three,
+        customer_address.invoice_postcode,
+        customer_address.delivery_address_one,
+        customer_address.delivery_address_two,
+        customer_address.delivery_address_three,
+        customer_address.delivery_postcode
+      FROM
+        invoices
+        INNER JOIN customers ON invoices.customer_id = customers.id
+        INNER JOIN customer_address ON customer_address.customer_id = invoices.customer_id
+      WHERE
+        invoices.id = ?';
+
+        $params = [
+            ['type' => 'i', 'value' => $invoice_id],
+        ];
+
+        $invoice_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $invoice_data;
+    }
+
+    public function get_invoice_products($invoice_id) {
+        $query = 'SELECT
+        items.item_name,
+        items.retail_price AS price,
+        invoiced_items.quantity,
+        invoiced_items.vat_charge
+        FROM
+        invoices
+        INNER JOIN invoiced_items ON invoices.id = invoiced_items.invoice_id
+        INNER JOIN items ON invoiced_items.item_id = items.id
+        WHERE
+        invoices.id = ?';
+
+        $params = [
+            ['type' => 'i', 'value' => $invoice_id],
+        ];
+
+        $invoice_products = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $invoice_products;
+    }
+
     public function get_total_invoices_month_profit($month, $year) {
         $query = 'SELECT 
         COUNT(*) AS total_invoices,
