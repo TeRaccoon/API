@@ -47,7 +47,7 @@ if (isset($data['action'])) {
             break;
 
         case 'delete':
-            drop($database, $_POST['table_name'], $_POST['id']);
+            drop($database, $data);
             break;
 
         case 'login':
@@ -145,7 +145,10 @@ function append_customer($customer_database, $customer_id, $data) {
     return $data;
 }
 
-function drop($conn, $table_name, $ids) {
+function drop($conn, $data) {
+    $table_name = $data['table_name'];
+    $ids = $data['id'];
+    
     if (str_contains($ids, ",")) {
         $ids = rtrim($ids, ',');
         $query = 'DELETE FROM ' . $table_name . ' WHERE ID IN (' . $ids . ')';
