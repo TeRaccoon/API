@@ -40,26 +40,25 @@ if (isset($data['action'])) {
     switch ($data['action']) {
         case 'add':
             insert($database, $database_utility, $data);
+            $response = array('success' => true, 'message' => 'Record added successfully');
             break;
 
         case 'append':
             append($database, $database_utility, $user_database, $customer_database, $data);
+            $response = array('success' => true, 'message' => 'Record appended successfully');
             break;
 
         case 'delete':
             drop($database, $data);
+            $response = array('success' => true, 'message' => 'Record dropped successfully');
             break;
 
         case 'login':
             login($user_database, $data);
             break;
     }
-    if ($_POST['action'] != 'login') {
-        echo "Ruh roh";
-        exit();
-    }
+    echo json_encode($response);
     $database->close_connection();
-    var_dump($_SESSION);
     exit();
 }
 else {

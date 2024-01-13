@@ -45,6 +45,12 @@ class AllDatabases {
     public function __construct($db_utility) {
         $this->db_utility = $db_utility;
     }
+
+    function get_tables() {
+        $query = 'SHOW TABLES';
+        $tables = $this->db_utility->execute_query($query, null, 'array');
+        return $tables;
+    }
     function get_table_data($table_name) {
         $query = 'SELECT * FROM '.$table_name;
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');

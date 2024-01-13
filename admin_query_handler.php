@@ -35,6 +35,10 @@ function run_query() {
             $results = construct_table($all_databases);
             break;
 
+        case "tables":
+            $results = $all_databases->get_tables();
+            break;
+
         case "total-invoices-month":
             $results = $invoice_database->get_total_invoices_month();
             break;
