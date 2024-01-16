@@ -192,11 +192,9 @@ class CustomerDatabase {
     }
 }
 class ItemDatabase {
-    private $conn;
     private $db_utility;
 
-    public function __construct($conn, $db_utility) {
-        $this->conn = $conn;
+    public function __construct($db_utility) {
         $this->db_utility = $db_utility;
     }
 
@@ -255,6 +253,12 @@ class ItemDatabase {
             ['type' => 'i', 'value' => $item_id]
         ];
         $this->db_utility->execute_query($query, $params, false);
+    }
+
+    function get_id_names() {
+        $query = 'SELECT id, item_name AS name FROM items';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
     }
 }
 
