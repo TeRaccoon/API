@@ -26,6 +26,7 @@ function run_query() {
     $image_locations_database = new ImageLocationsDatabase($database_utility);
     $page_sections_database = new PageSectionsDatabase($database_utility);
     $retail_user_database = new RetailUserDatabase($database_utility);
+    $items_database = new ItemDatabase($database_utility);
     $ledger_database = new LedgerDatabase($database_utility);
 
     $conn->connect();
@@ -102,6 +103,10 @@ function run_query() {
             $invoice_id = urldecode($_GET['filter']);
             $results = $invoice_database->get_invoice_products($invoice_id);
             break;
+
+        case "items_id_name":
+            $results = $items_database->get_id_names();
+            break;
     }
     echo json_encode($results);
 }
@@ -121,8 +126,12 @@ function construct_table($all_databases) {
         $data_types[] = $column['Type'];
         if ($column['Extra'] == null) {
             $edittable_display_names[] = $column['Comment'];
-            $edittable_data_types[] = $column['Type'];
             $edittable_field_names[] = $column['Field'];
+            if ($column['Field'] == 'image_file_name') {
+                $edittable_data_types[] = 'file';
+            } else {
+                $edittable_data_types[] = $column['Type'];
+            }
             if ($column['Null'] == "NO") {
                 $edittable_required[] = true;
             } else {
