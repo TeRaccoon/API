@@ -107,6 +107,22 @@ function run_query() {
         case "items_id_name":
             $results = $items_database->get_id_names();
             break;
+
+        case "top-selling-item":
+            $results = $items_database->get_top_selling_item();
+            break;
+
+        case "least-purchased-item":
+            $results = $items_database->get_least_purchased_item();
+            break;
+
+        case "most-income-item":
+            $results = $items_database->get_most_income_item();
+            break;
+
+        case "least-income-item":
+            $results = $items_database->get_least_income_item();
+            break;
     }
     echo json_encode($results);
 }
@@ -123,7 +139,7 @@ function construct_table($all_databases) {
     $table_columns = $all_databases->get_columns($table_name);
     foreach ($table_columns as $key => $column) {
         $formatted_names[] = $column['Comment'];
-        $data_types[] = $column['Type'];
+        $data_types[] = $column['Field'] == 'image_file_name' ? 'file' : $column['Type'];
         if ($column['Extra'] == null) {
             $edittable_display_names[] = $column['Comment'];
             $edittable_field_names[] = $column['Field'];
