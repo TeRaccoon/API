@@ -224,6 +224,12 @@ class ItemDatabase
         $this->db_utility = $db_utility;
     }
 
+    function get_low_stock_items() {
+        $query = 'SELECT * FROM stocked_items WHERE quantity < 10';
+        $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $item_data;
+    }
+
     function get_most_income_item()
     {
         $query = 'SELECT 
@@ -588,6 +594,12 @@ class InvoiceDatabase
     public function __construct($db_utility)
     {
         $this->db_utility = $db_utility;
+    }
+
+    public function get_invoices_due_today_ids() {
+        $query = 'SELECT id FROM invoices WHERE due_date = CURDATE()';
+        $invoice_ids = $this->db_utility->execute_query($query, null, 'array');
+        return $invoice_ids;
     }
 
     public function get_invoice_info($invoice_id)

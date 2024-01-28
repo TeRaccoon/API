@@ -48,6 +48,10 @@ function run_query() {
             $results = $invoice_database->get_invoices_due_today();
             break;
 
+        case "invoices-due-today-ids":
+            $results = $invoice_database->get_invoices_due_today_ids();
+            break;
+
         case "total-customers":
             $results = $customer_database->get_total_customers();
             break;
@@ -122,6 +126,10 @@ function run_query() {
 
         case "least-income-item":
             $results = $items_database->get_least_income_item();
+            break;
+
+        case "low-stock":
+            $results = $items_database->get_low_stock_items();
             break;
     }
     echo json_encode($results);
