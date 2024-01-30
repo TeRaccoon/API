@@ -1,20 +1,23 @@
 <?php
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Origin: http://localhost:4200");
     header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
     header("Access-Control-Max-Age: 3600");
+    header("Access-Control-Allow-Credentials: true");
     exit;
 }
 
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: http://localhost:4200");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET,POST,PUT,DELETE");
 header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 session_start();
+
 
 require_once 'dbh.php';
 require_once 'database_functions.php';
@@ -55,6 +58,14 @@ if (isset($data['action'])) {
 
         case 'login':
             login($user_database, $data);
+            break;
+
+        case 'logout':
+            logout();
+            break;
+
+        case 'check-login':
+            check_login();
             break;
     }
     echo json_encode($response);
@@ -284,6 +295,23 @@ function get_row_contents($conn, $query_string)
     return $contents;
 }
 
+function check_login() {
+    if (isset($_SESSION['user']) && $_SESSION['user']) {
+        $response = array('success' => true, 'message' => 'User logged in');
+    }
+    else {
+        $response = array('success' => false, 'message' => 'No previous logins');
+    }
+    
+    echo json_encode($response);
+    exit();
+}
+
+function logout() {
+    session_destroy();
+    return "Session cleared successfully!";
+}
+
 function login($user_database, $data)
 {
     $username = $data['username'];
@@ -291,10 +319,12 @@ function login($user_database, $data)
 
     $password_hash = $user_database->get_user_password($username);
     if ($password_hash != null && password_verify($password, $password_hash)) {
+        $_SESSION['user'] = 'authenticated';
         $response = array('success' => true, 'message' => 'Login successful');
     } else {
         $response = array('success' => false, 'message' => 'Invalid credentials');
     }
+
     echo json_encode($response);
     exit();
 }
