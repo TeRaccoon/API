@@ -16,7 +16,16 @@ header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
+
 session_start();
+
+if (!isset($_SESSION['CREATED'])) {
+    $_SESSION['CREATED'] = time();
+} else if (time() - $_SESSION['CREATED'] > 18000) {
+    session_regenerate_id();
+    session_destroy();
+    $_SESSION['CREATED'] = time();
+}
 
 
 require_once 'dbh.php';
