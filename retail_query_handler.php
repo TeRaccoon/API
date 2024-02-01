@@ -101,6 +101,11 @@ function run_query() {
             $results = $retail_items_database->get_products_from_category($category);
             break;
 
+        case 'product-from-id':
+            $id = urldecode($_GET['filter']);
+            $results = $retail_items_database->get_product_from_id($id);
+            break;
+
         case 'products':
             $results = $retail_items_database->get_products();
             break;

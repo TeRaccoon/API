@@ -451,10 +451,18 @@ class RetailItemsDatabase
         return $subcategories;
     }
 
-
+    public function get_product_from_id($id)
+    {
+        $query = 'SELECT i.retail_price, ri.discount, ri.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE i.id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id]
+        ];
+        $product = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $product;
+    }
     public function get_top_products($limit)
     {
-        $query = 'SELECT i.item_name AS item_name, i.retail_price AS price, ri.offer_start, ri.offer_end, ri.discount, ri.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id ORDER BY i.total_sold DESC LIMIT 0, ?';
+        $query = 'SELECT i.id, i.item_name AS item_name, i.retail_price AS price, ri.offer_start, ri.offer_end, ri.discount, ri.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id ORDER BY i.total_sold DESC LIMIT 0, ?';
         $params = [
             ['type' => 'i', 'value' => $limit]
         ];
