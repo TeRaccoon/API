@@ -224,13 +224,13 @@ function get_display_data($data, $table_name, $all_databases) {
                     $assoc_table_data = $all_databases->get_invoice_titles();
                     break;
                 
-                // case "items":
-                //     $alt_query = $conn->query("SELECT `id`, `item_name` FROM `items`");
-                //     break;
-                
-                // case "invoices":
-                //     $alt_query = $conn->query("SELECT `id`, `title` FROM `invoices`");
-                //     break;
+                case "items":
+                    $assoc_table_data = $all_databases->get_item_names();
+                    break;
+
+                case "retail_items":
+                    
+                    break;
                 
                 // case "suppliers":
                 //     $alt_query = $conn->query("SELECT `id`, CONCAT(`forename`, ' ', `surname`) AS full_name FROM `suppliers`");

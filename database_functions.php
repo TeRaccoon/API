@@ -104,6 +104,19 @@ class AllDatabases
         return $this->format_data('title', $titles);
     }
 
+    function get_item_names()
+    {
+        $query = 'SELECT id, item_name FROM items';
+        $names = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $this->format_data('item_name', $names);
+    }
+
+    function get_retail_item_names() {
+        $query = 'SELECT ri.id, i.item_name FROM `items` AS i INNER JOIN `retail_items` AS ri ON ri.item_id = i.id';
+        $names = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $this->format_data('item_name', $names);
+    }
+
     function format_data($key, $incoming_data)
     {
         $data = [];
