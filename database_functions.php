@@ -76,6 +76,18 @@ class AllDatabases
         return $data;
     }
 
+    function get_page_section_id_names() {
+        $query = 'SELECT id, name AS replacement FROM page_sections';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
+
+    function get_retail_item_id_names() {
+        $query = 'SELECT ri.id, i.item_name AS replacement FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
+
     function get_columns($table_name)
     {
         $query = 'SHOW FULL COLUMNS FROM ' . $table_name;
@@ -95,6 +107,12 @@ class AllDatabases
         $query = 'SELECT `id`, CONCAT(`forename`, " ", `surname`) AS full_name FROM `customers`';
         $names = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $this->format_data("full_name", $names);
+    }
+
+    function get_page_section_names() {
+        $query = 'SELECT id, name FROM page_sections';
+        $names = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $this->format_data('name', $names);
     }
 
     function get_invoice_titles()
@@ -237,6 +255,13 @@ class CustomerDatabase
         $customer_count = $this->db_utility->execute_query($query, null, 'assoc-array')['count'];
         return $customer_count;
     }
+
+    function get_id_names()
+    {
+        $query = 'SELECT id, CONCAT(`forename`, " ", `surname`) AS replacement FROM customers';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
 }
 class ItemDatabase
 {
@@ -376,7 +401,7 @@ class ItemDatabase
 
     function get_id_names()
     {
-        $query = 'SELECT id, item_name AS name FROM items';
+        $query = 'SELECT id, item_name AS replacement FROM items';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }

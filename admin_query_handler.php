@@ -122,6 +122,18 @@ function run_query() {
             $results = $items_database->get_id_names();
             break;
 
+        case "customers_id_name":
+            $results = $customer_database->get_id_names();
+            break;
+
+        case "page_section_id_name":
+            $results = $all_databases->get_page_section_id_names();
+            break;
+
+        case "retail_item_id_name":
+            $results = $all_databases->get_retail_item_id_names();
+            break;
+
         case "top-selling-item":
             $results = $items_database->get_top_selling_item();
             break;
@@ -229,12 +241,12 @@ function get_display_data($data, $table_name, $all_databases) {
                     break;
 
                 case "retail_items":
-                    
+                    $assoc_table_data = $all_databases->get_retail_item_names();
                     break;
                 
-                // case "suppliers":
-                //     $alt_query = $conn->query("SELECT `id`, CONCAT(`forename`, ' ', `surname`) AS full_name FROM `suppliers`");
-                //     break;
+                case "page_sections":
+                    $assoc_table_data = $all_databases->get_page_section_names();
+                    break;
                 
                 // case "retail_items":
                 //     $alt_query = $conn->query("SELECT ri.id, i.item_name FROM `items` AS i INNER JOIN `retail_items` AS ri ON ri.item_id = i.id");

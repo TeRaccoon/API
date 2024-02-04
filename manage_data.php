@@ -81,7 +81,7 @@ if (isset($data['action'])) {
     $database->close_connection();
     exit();
 } else {
-    ErrorHandler::set_error("ERROR: Inconclusive call! Please contact administrator!", "other", "E_SQL-MD-001", null);
+    echo("ERROR: Inconclusive call! Please contact administrator!" . "other" . "E_SQL-MD-001");
     echo "Ruh roh";
     exit();
 }
@@ -141,7 +141,7 @@ function handle_image($table_name)
             echo "File is valid, and was successfully uploaded.";
         } else {
             if ($_POST['action'] == 'add')
-                ErrorHandler::set_error("Warning: There was an error uploading the file! The file may not be valid!", "upload", "E_PHP-MD-001", "The file may already exist on the server in which case this can be ignored. If not, make sure the file is of type JPEG / JPG / PNG.");
+                echo("Warning: There was an error uploading the file! The file may not be valid!" . "upload" . "E_PHP-MD-001" . "The file may already exist on the server in which case this can be ignored. If not, make sure the file is of type JPEG / JPG / PNG.");
         }
     }
 }
@@ -223,7 +223,7 @@ function synchronise($conn, $table_name, $id, $query_string)
             }
 
             if (!$conn->commit()) {
-                ErrorHandler::set_error('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!', 'other', 'F_SQL-MD-0002', $conn->error);
+                echo('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!'. 'other'. 'F_SQL-MD-0002'. $conn->error);
                 $conn->abort();
             }
             $debt = $invoice_database->get_customer_debt($customer_id);
@@ -240,7 +240,7 @@ function synchronise($conn, $table_name, $id, $query_string)
 
         default:
             if (!$conn->commit()) {
-                ErrorHandler::set_error('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!', 'other', 'F_SQL-MD-0003', $conn->error);
+                echo('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!' . 'other' . 'F_SQL-MD-0003' . $conn->error);
                 echo "Ruh roh";
             }
             break;
@@ -251,7 +251,7 @@ function synchronise($conn, $table_name, $id, $query_string)
     }
 
     if (!$conn->commit()) {
-        ErrorHandler::set_error('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!', 'other', 'F_SQL-MD-0004', $conn->error);
+        echo('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!' . 'other' . 'F_SQL-MD-0004' . $conn->error);
     }
 }
 
@@ -376,7 +376,7 @@ function construct_submitted_data($db_utility, $field_names, $table_name, $data)
                 $submitted_data[$field_name] = $date;
             }
         } else {
-            if ($field_name == "image_file_name") {
+            if ($field_name == "image_file_name" && array_key_exists('image_file_name', $_FILES)) {
                 if ($_FILES[$field_name]['name'] == null) {
                     $file_name = $db_utility->recover_retail_image($data['id']);
                     $data[$field_name] = $file_name;
