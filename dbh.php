@@ -82,8 +82,6 @@ class DatabaseConnection {
         $this->conn->rollback();
         $this->close_connection();
 
-        header("Location: {$_SERVER["HTTP_REFERER"]}");
         exit();
     }
 }
-?>
