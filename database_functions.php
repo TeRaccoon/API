@@ -384,12 +384,10 @@ class ItemDatabase
 
 class CustomerPaymentsDatabase
 {
-    private $conn;
     private $db_utility;
 
-    public function __construct($conn, $db_utility)
+    public function __construct($db_utility)
     {
-        $this->conn = $conn;
         $this->db_utility = $db_utility;
     }
     public function get_total_invoice_payments($invoice_id)

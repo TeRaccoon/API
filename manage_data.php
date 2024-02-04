@@ -196,10 +196,10 @@ function synchronise($conn, $table_name, $id, $query_string)
     require_once 'database_utility.php';
 
     $database_utility = new DatabaseUtility($conn);
-    $customer_database = new CustomerDatabase($conn, $database_utility);
-    $item_database = new ItemDatabase($conn, $database_utility);
+    $customer_database = new CustomerDatabase($database_utility);
+    $item_database = new ItemDatabase($database_utility);
     $invoice_database = new InvoiceDatabase($database_utility);
-    $customer_payments_database = new CustomerPaymentsDatabase($conn, $database_utility);
+    $customer_payments_database = new CustomerPaymentsDatabase($database_utility);
 
     $action = $_POST['action'];
 
@@ -346,12 +346,10 @@ function create_account($user_database)
     $user_database->user_exists($username);
     if ($rows != 0) {
         $_SESSION['mysql_error'] =  "Error: A user with that username is taken!";
-        header("Location: {$_SERVER["HTTP_REFERER"]}");
     } else {
         $stmt = $conn->prepare("INSERT INTO users (`username`, `password`, `level`) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $username, $password, $access_level);
         $stmt->execute();
-        header("Location: {$_SERVER["HTTP_REFERER"]}");
         exit();
     }
 }
