@@ -692,6 +692,54 @@ class InvoiceDatabase
         return $invoice_data;
     }
 
+    public function get_basic_invoiced_item_from_id($invoice_id) {
+        $query = 'SELECT 
+            ii.quantity AS quantity, 
+            it.item_name AS name,
+            inv.id AS title 
+        FROM 
+            invoiced_items AS ii 
+        INNER JOIN 
+            items AS it ON ii.item_id = it.id 
+        INNER JOIN 
+            invoices AS inv ON ii.invoice_id = inv.id 
+        WHERE 
+            inv.id = ?';
+
+        $params = [
+            ['type' => 'i', 'value' => $invoice_id],
+        ];
+        $data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $data;
+    }
+
+    public function get_basic_invoiced_item_from_ids($invoice_ids) {
+        $invoice_ids_array = explode(',', $invoice_ids);
+    
+        $placeholders = rtrim(str_repeat('?, ', count($invoice_ids_array)), ', ');
+    
+        $query = 'SELECT 
+                    ii.quantity AS quantity, 
+                    it.item_name AS name,
+                    inv.id AS title 
+                  FROM 
+                    invoiced_items AS ii 
+                  INNER JOIN 
+                    items AS it ON ii.item_id = it.id 
+                  INNER JOIN 
+                    invoices AS inv ON ii.invoice_id = inv.id 
+                  WHERE
+                    inv.id IN (' . $placeholders . ')';
+    
+        $params = [];
+        foreach ($invoice_ids_array as $id) {
+            $params[] = ['type' => 's', 'value' => $id];
+        }
+    
+        $data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $data;
+    }
+
     public function get_invoice_products($invoice_id)
     {
         $query = 'SELECT

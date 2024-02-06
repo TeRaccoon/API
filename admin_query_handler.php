@@ -153,6 +153,16 @@ function run_query() {
         case "low-stock":
             $results = $items_database->get_low_stock_items();
             break;
+
+        case "invoiced-items-basic-id":
+            $invoice_id = urldecode($_GET['filter']);
+            $results = $invoice_database->get_basic_invoiced_item_from_id($invoice_id);
+            break;
+
+        case "invoiced-items-basic-ids":
+            $invoice_ids = urldecode($_GET['ids']);
+            $results = $invoice_database->get_basic_invoiced_item_from_ids($invoice_ids);
+            break;
     }
     echo json_encode($results);
 }
