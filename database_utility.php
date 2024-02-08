@@ -116,12 +116,13 @@ class DatabaseUtility {
     }
     public function construct_append_query($table_name, $field_names, $submitted_data) {
         $set_string = implode(', ', array_map(function($field) use ($submitted_data) {
-            return "$field = " . ($submitted_data[$field] == "" ? "NULL" : "'{$submitted_data[$field]}'");
+            $fieldValue = isset($submitted_data[$field]) ? $submitted_data[$field] : "";
+            return "$field = " . ($fieldValue === "" ? "NULL" : "'$fieldValue'");
         }, $field_names));
-
+    
         $query = 'UPDATE ' . $table_name . ' SET ' . $set_string . ' WHERE ID = ' . $_POST['id'];
         return $query;
-    }
+    }    
 
     public function execute_delete_query($table_name, $id) {
         $query = 'DELETE FROM ' . $table_name . ' WHERE ID = (?)';

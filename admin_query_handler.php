@@ -163,6 +163,11 @@ function run_query() {
             $invoice_ids = urldecode($_GET['ids']);
             $results = $invoice_database->get_basic_invoiced_item_from_ids($invoice_ids);
             break;
+
+        case "images-from-item-id":
+            $item_id = urldecode($_GET['filter']);
+            $results = $all_databases->get_images_from_item_id($item_id);
+            break;
     }
     echo json_encode($results);
 }

@@ -180,6 +180,15 @@ class AllDatabases
         $profit_loss_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $profit_loss_data;
     }
+
+    function get_images_from_item_id($item_id) {
+        $query = 'SELECT rii.image_file_name FROM retail_item_images AS rii INNER JOIN retail_items AS ri ON rii.retail_item_id = ri.id WHERE ri.item_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $item_id],
+        ];
+        $item_locations = $this->db_utility->execute_query($query, $params, 'array');
+        return $item_locations;
+    }
 }
 
 class CustomerDatabase

@@ -93,8 +93,6 @@ function insert($conn, $database_utility, $data)
     $submitted_data = construct_submitted_data($database_utility, $field_names, $table_name, $data);
     $query = $database_utility->construct_insert_query($table_name, $field_names, $submitted_data, $data);
 
-    handle_image($table_name);
-
     $conn->query($query);
     $conn->commit();
 
@@ -114,37 +112,12 @@ function append($conn, $database_utility, $user_database, $customer_database, $d
     $submitted_data = construct_submitted_data($database_utility, $field_names, $table_name, $data);
     $query = $database_utility->construct_append_query($table_name, $field_names, $submitted_data);
 
-    handle_image($table_name);
-
     $conn->query($query);
     $conn->commit();
 
     synchronise($conn, $table_name, $data['id'], $query);
 }
 
-function handle_image($table_name)
-{
-    if (isset($_FILES['image_file_name']) && $_FILES['image_file_name']['error'] == 0) {
-        $uploadDir = "../uploads/";
-        switch ($table_name) {
-            case 'retail_items':
-                $uploadDir = '../uploads/';
-                break;
-
-            default:
-                return;
-        }
-        $uploadFile = $uploadDir . basename($_FILES["image_file_name"]["name"]);
-
-        // Move the uploaded file to the desired directory
-        if (move_uploaded_file($_FILES["image_file_name"]["tmp_name"], $uploadFile)) {
-            echo "File is valid, and was successfully uploaded.";
-        } else {
-            if ($_POST['action'] == 'add')
-                echo("Warning: There was an error uploading the file! The file may not be valid!" . "upload" . "E_PHP-MD-001" . "The file may already exist on the server in which case this can be ignored. If not, make sure the file is of type JPEG / JPG / PNG.");
-        }
-    }
-}
 function append_user($user_database, $username, $data)
 {
     $current_password = $user_database->get_user_password($username);
@@ -382,6 +355,7 @@ function construct_submitted_data($db_utility, $field_names, $table_name, $data)
                     $data[$field_name] = $file_name;
                 } else {
                     $data[$field_name] = $_FILES[$field_name]['name'];
+                    echo  $_FILES[$field_name]['name'];
                 }
             }
             $submitted_data[$field_name] = $data[$field_name];
