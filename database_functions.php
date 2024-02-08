@@ -189,6 +189,15 @@ class AllDatabases
         $item_locations = $this->db_utility->execute_query($query, $params, 'array');
         return $item_locations;
     }
+
+    function get_images_count_from_item_id($item_id) {
+        $query = 'SELECT COUNT(rii.image_file_name) AS count FROM retail_item_images AS rii WHERE rii.retail_item_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $item_id],
+        ];
+        $item_locations = $this->db_utility->execute_query($query, $params, 'assoc-array')['count'];
+        return $item_locations;
+    }
 }
 
 class CustomerDatabase

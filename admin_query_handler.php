@@ -168,6 +168,11 @@ function run_query() {
             $item_id = urldecode($_GET['filter']);
             $results = $all_databases->get_images_from_item_id($item_id);
             break;
+
+        case "image-count-from-item-id":
+            $item_id = urldecode($_GET['filter']);
+            $results = $all_databases->get_images_count_from_item_id($item_id);
+            break;
     }
     echo json_encode($results);
 }
