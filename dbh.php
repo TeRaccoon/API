@@ -62,13 +62,13 @@ class DatabaseConnection {
             $result = $this->conn->query($query);
     
             if ($result === false) {
-                echo('ERROR: There was an error querying the database!<br>' . $query . 'query' . 'F_SQL_DBH_001' . $this->conn->error);
+                echo json_encode(array('success' => false, 'message' => 'There was an error querying the database! ' . $this->conn->error));
                 $this->abort();
             }
     
             return $result;
         } catch (Exception $e) {
-            echo('ERROR: There was an error querying the database!' . 'query' . 'F_SQL_DBH_002' . $this->conn->error);
+            echo json_encode(array('success' => false, 'message' => 'There was an error querying the database! ' . $this->conn->error));
             $this->abort();            
         }
     }
@@ -81,7 +81,6 @@ class DatabaseConnection {
     public function abort() {
         $this->conn->rollback();
         $this->close_connection();
-        echo "Connection aborted";
         exit();
     }
 }
