@@ -134,6 +134,10 @@ function run_query() {
             $results = $all_databases->get_retail_item_id_names();
             break;
 
+        case "supplier_id_name":
+            $results = $all_databases->get_supplier_id_names();
+            break;
+
         case "top-selling-item":
             $results = $items_database->get_top_selling_item();
             break;

@@ -88,6 +88,12 @@ class AllDatabases
         return $data;
     }
 
+    function get_supplier_id_names() {
+        $query = 'SELECT id, account_name AS replacement FROM suppliers';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
+
     function get_columns($table_name)
     {
         $query = 'SHOW FULL COLUMNS FROM ' . $table_name;
