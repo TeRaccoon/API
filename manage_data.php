@@ -16,7 +16,6 @@ header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-
 session_start();
 
 if (!isset($_SESSION['CREATED'])) {
@@ -75,6 +74,10 @@ if (isset($data['action'])) {
 
         case 'check-login':
             check_login();
+            break;
+
+        case 'change-password':
+            $response = change_password($user_database, $data, $database);
             break;
     }
     echo json_encode($response);
@@ -302,6 +305,7 @@ function login($user_database, $data)
     $password_hash = $user_database->get_user_password($username);
     if ($password_hash != null && password_verify($password, $password_hash)) {
         $_SESSION['user'] = 'authenticated';
+        $_SESSION['username'] = $username;
         $response = array('success' => true, 'message' => 'Login successful');
     } else {
         $response = array('success' => false, 'message' => 'Invalid credentials');
@@ -309,6 +313,23 @@ function login($user_database, $data)
 
     echo json_encode($response);
     exit();
+}
+
+function change_password($user_database, $data, $conn) {
+    if (key_exists('current_password', $data) && key_exists('new_password', $data) && key_exists('username', $data)) {
+        $current_password = $data['current_password'];
+        $current_password_hash = $user_database->get_user_password($data['username']);
+        if ($current_password_hash != null && password_verify($current_password, $current_password_hash)) {
+            $user_database->change_password($data['username'], $data['new_password']);
+            $conn->commit();
+            return array('success' => true, 'message' => 'Password changed successfully!');
+        } else {
+            return array('success' => false, 'message' => 'The password was incorrect!');
+        }
+
+    } else {
+        return array('success' => false, 'message' => 'There was data missing! Please login again');
+    }
 }
 function create_account($user_database)
 {

@@ -36,7 +36,6 @@ class DatabaseUtility {
                 array_unshift($paramValues, $paramTypes);
                 call_user_func_array([$stmt, 'bind_param'], $paramValues);
             }
-
             $this->conn->execute($stmt);
 
             switch ($results_format) {

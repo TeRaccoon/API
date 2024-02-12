@@ -44,6 +44,21 @@ class UserDatabase
         return $access_level;
     }
 
+    function change_password($username, $password)
+    {
+        $password_hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
+    
+        $query = 'UPDATE users SET password = ? WHERE username = ?';
+        
+        $params = [
+            ['type' => 's', 'value' => $password_hash],
+            ['type' => 's', 'value' => $username],
+        ];
+        
+        // Execute the query
+        $this->db_utility->execute_query($query, $params, false);
+    }
+
     function user_exists($username)
     {
         $query = 'SELECT username FROM users WHERE username = ?';
