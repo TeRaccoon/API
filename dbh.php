@@ -44,7 +44,6 @@ class DatabaseConnection {
         return $this->conn->prepare($sql);
     }
     public function query($query) {
-        require_once 'error-handler.php';
         try {
             $result = $this->conn->query($query);
     
