@@ -1,8 +1,8 @@
 <?php
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    header("Access-Control-Allow-Origin: http://158.220.83.74");
-//header("Access-Control-Allow-Origin: http://localhost:4200");
+    // header("Access-Control-Allow-Origin: http://158.220.83.74");
+    header("Access-Control-Allow-Origin: http://localhost:4200");
     header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
     header("Access-Control-Max-Age: 3600");
@@ -10,8 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit;
 }
 
-header("Access-Control-Allow-Origin: http://158.220.83.74");
-//header("Access-Control-Allow-Origin: http://localhost:4200");
+// header("Access-Control-Allow-Origin: http://158.220.83.74");
+header("Access-Control-Allow-Origin: http://localhost:4200");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET,POST,PUT,DELETE");
 header("Access-Control-Max-Age: 3600");
@@ -32,7 +32,6 @@ if (!isset($_SESSION['CREATED'])) {
 require_once 'dbh.php';
 require_once 'database_functions.php';
 require_once 'database_utility.php';
-require_once 'error-handler.php';
 
 $input_data = file_get_contents("php://input");
 $data = json_decode($input_data, true);
@@ -87,7 +86,6 @@ if (isset($data['action'])) {
     exit();
 } else {
     echo("ERROR: Inconclusive call! Please contact administrator!" . "other" . "E_SQL-MD-001");
-    echo "Ruh roh";
     exit();
 }
 
