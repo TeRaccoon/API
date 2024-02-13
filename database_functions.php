@@ -32,8 +32,11 @@ class UserDatabase
         $params = [
             ['type' => 's', 'value' => $username]
         ];
-        $password_hash = $this->db_utility->execute_query($query, $params, 'assoc-array')['password'];
-        return $password_hash;
+        $password_hash = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        if (key_exists('password', $password_hash)) {
+            return $password_hash['password'];
+        }
+        return '';
     }
 
     function get_access_level($username)
