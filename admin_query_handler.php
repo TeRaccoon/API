@@ -56,6 +56,11 @@ function run_query() {
             $results = $customer_database->get_new_customers();
             break;
 
+        case "next-invoice-id":
+            $tableName = urldecode($_GET['filter']);
+            $results = $invoice_database->get_next_invoice_id($tableName);
+            break;
+
         case "account-balances":
             $results = $ledger_database->get_account_balance($_GET['start-date'], $_GET['end-date']);
             break;

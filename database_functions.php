@@ -721,6 +721,13 @@ class InvoiceDatabase
         return $invoice_data;
     }
 
+    public function get_next_invoice_id($table_name) {
+        $query = 'SELECT MAX(id) + 1 AS next_id FROM ' . $table_name;
+
+        $next_id = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $next_id;
+    }
+
     public function get_basic_invoiced_item_from_id($invoice_id) {
         $query = 'SELECT 
             ii.quantity AS quantity, 
