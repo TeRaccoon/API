@@ -69,6 +69,11 @@ function run_query() {
             $results = $invoice_database->get_creditor_data($_GET['start-day'], $_GET['end-day']);
             break;
 
+        case "edit-form-data":
+            $table_name = urldecode($_GET['filter']);
+            $results = construct_edit_form($table_name, $all_databases);
+            break;
+
         case "debtor":
             if ($_GET['end-day'] != "null") {
                 $results = $invoice_database->get_debtor_data($_GET['start-day'], $_GET['end-day']);
@@ -168,8 +173,54 @@ function run_query() {
             $item_id = urldecode($_GET['filter']);
             $results = $all_databases->get_images_count_from_item_id($item_id);
             break;
+
+        case "reverse-item-id":
+            $item_id = urldecode($_GET['filter']);
+            $results = $retail_items_database->reverse_item_id($item_id);
+            break;
+        
+        case "append-or-add":
+            $table = urldecode($_GET['table']);
+            $id = urldecode($_GET['id']);
+            $column = urldecode($_GET['column']);
+            $results = $all_databases->append_or_add($table, $id, $column);
+            break;
     }
     echo json_encode($results);
+}
+
+function construct_edit_form($table_name, $all_databases) {
+    $edittable_display_names = [];
+    $edittable_data_types = [];
+    $edittable_required = [];
+    $edittable_field_names = [];
+
+    $table_columns = $all_databases->get_columns($table_name);
+    foreach ($table_columns as $key => $column) {
+        if ($column['Extra'] == null) {
+            $edittable_display_names[] = $column['Comment'];
+            $edittable_field_names[] = $column['Field'];
+            if ($column['Field'] == 'image_file_name') {
+                $edittable_data_types[] = 'file';
+            } else {
+                $edittable_data_types[] = $column['Type'];
+            }
+            if ($column['Null'] == "NO") {
+                $edittable_required[] = true;
+            } else {
+                $edittable_required[] = false;
+            }
+        }
+    }
+
+    $edittable_columns = get_edittable_columns($table_name, $all_databases);
+    return [
+        'columns' => $edittable_columns,
+        'fields' => $edittable_field_names,
+        'types' => $edittable_data_types,
+        'names' => $edittable_display_names,
+        'required' => $edittable_required
+    ];
 }
 
 function construct_table($all_databases) {

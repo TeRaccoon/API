@@ -68,6 +68,14 @@ class AllDatabases
         $this->db_utility = $db_utility;
     }
 
+    public function append_or_add($table, $id, $column)
+    {
+        $query = 'SELECT * FROM ' . $table . ' WHERE ' . $column . ' = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id],
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
     function get_tables()
     {
         $query = 'SHOW TABLES';
@@ -502,6 +510,15 @@ class RetailItemsDatabase
         $item_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $item_data;
     }
+    
+    public function reverse_item_id($item_id) {
+        $query = 'SELECT id FROM retail_items WHERE item_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array')['id'];
+    }
+
     public function get_categories()
     {
         $query = 'SELECT DISTINCT category FROM retail_items ORDER BY category';
