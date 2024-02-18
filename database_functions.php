@@ -510,6 +510,11 @@ class RetailItemsDatabase
         $item_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $item_data;
     }
+
+    public function brands() {
+        $query = 'SELECT DISTINCT brand FROM retail_items WHERE brand IS NOT NULL';
+        return $this->db_utility->execute_query($query, null, 'array');
+    }
     
     public function reverse_item_id($item_id) {
         $query = 'SELECT id FROM retail_items WHERE item_id = ?';
@@ -700,6 +705,11 @@ class InvoiceDatabase
         $query = 'SELECT id FROM invoices WHERE due_date = CURDATE()';
         $invoice_ids = $this->db_utility->execute_query($query, null, 'array');
         return $invoice_ids;
+    }
+
+    public function get_invoice_id_titles() {
+        $query = 'SELECT id, title AS replacement FROM invoices';
+        return $this->db_utility->execute_query($query, null, 'assoc-array');
     }
 
     public function get_invoice_info($invoice_id)

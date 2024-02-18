@@ -134,6 +134,10 @@ function run_query() {
             $results = $all_databases->get_supplier_id_names();
             break;
 
+        case "invoice_id_title":
+            $results = $invoice_database->get_invoice_id_titles();
+            break;
+
         case "top-selling-item":
             $results = $items_database->get_top_selling_item();
             break;
@@ -184,6 +188,10 @@ function run_query() {
             $id = urldecode($_GET['id']);
             $column = urldecode($_GET['column']);
             $results = $all_databases->append_or_add($table, $id, $column);
+            break;
+
+        case "brands":
+            $results = $retail_items_database->brands();
             break;
     }
     echo json_encode($results);
