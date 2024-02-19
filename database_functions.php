@@ -90,13 +90,13 @@ class AllDatabases
     }
 
     function get_page_section_id_names() {
-        $query = 'SELECT id, name AS replacement FROM page_sections';
+        $query = 'SELECT id, name AS replacement FROM page_sections ORDER BY replacement ASC';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
 
     function get_retail_item_id_names() {
-        $query = 'SELECT ri.id, i.item_name AS replacement FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id';
+        $query = 'SELECT ri.id, i.item_name AS replacement FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id ORDER BY replacement ASC';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
@@ -295,7 +295,7 @@ class CustomerDatabase
 
     function get_id_names()
     {
-        $query = 'SELECT id, account_name AS replacement FROM customers';
+        $query = 'SELECT id, account_name AS replacement FROM customers ORDER BY replacement ASC';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
@@ -438,7 +438,7 @@ class ItemDatabase
 
     function get_id_names()
     {
-        $query = 'SELECT id, item_name AS replacement FROM items';
+        $query = 'SELECT id, item_name AS replacement FROM items ORDER BY replacement ASC';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
@@ -708,7 +708,7 @@ class InvoiceDatabase
     }
 
     public function get_invoice_id_titles() {
-        $query = 'SELECT id, title AS replacement FROM invoices';
+        $query = 'SELECT id, title AS replacement FROM invoices ORDER BY replacement ASC';
         return $this->db_utility->execute_query($query, null, 'assoc-array');
     }
 
