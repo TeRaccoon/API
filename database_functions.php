@@ -13,7 +13,7 @@ class UserDatabase
 
     function get_user_password($username)
     {
-        $query = 'SELECT password FROM users WHERE username = ?';
+        $query = 'SELECT password FROM users WHERE BINARY username = ?';
         $params = [
             ['type' => 's', 'value' => $username]
         ];
@@ -210,7 +210,7 @@ class AllDatabases
     }
 
     function get_images_count_from_item_id($item_id) {
-        $query = 'SELECT COUNT(rii.image_file_name) AS count FROM retail_item_images AS rii WHERE rii.retail_item_id = ?';
+        $query = 'SELECT COUNT(rii.image_file_name) AS count FROM retail_item_images AS rii WHERE rii.item_id = ?';
         $params = [
             ['type' => 'i', 'value' => $item_id],
         ];
