@@ -201,7 +201,7 @@ class AllDatabases
     }
 
     function get_images_from_item_id($item_id) {
-        $query = 'SELECT rii.image_file_name FROM retail_item_images AS rii INNER JOIN retail_items AS ri ON rii.retail_item_id = ri.id WHERE ri.item_id = ?';
+        $query = 'SELECT image_file_name FROM retail_item_images AS rii WHERE rii.item_id = ?';
         $params = [
             ['type' => 'i', 'value' => $item_id],
         ];
@@ -755,11 +755,11 @@ class InvoiceDatabase
         return $next_id;
     }
 
-    public function get_basic_invoiced_item_from_id($invoice_id) {
+    public function get_invoiced_items_from_id($invoice_id) {
         $query = 'SELECT 
+            ii.id AS id,
             ii.quantity AS quantity, 
-            it.item_name AS name,
-            inv.id AS title 
+            it.item_name AS name
         FROM 
             invoiced_items AS ii 
         INNER JOIN 

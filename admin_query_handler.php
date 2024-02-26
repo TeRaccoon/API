@@ -158,9 +158,9 @@ function run_query() {
             $results = $items_database->get_low_stock_items();
             break;
 
-        case "invoiced-items-basic-id":
+        case "invoiced-items":
             $invoice_id = urldecode($_GET['filter']);
-            $results = $invoice_database->get_basic_invoiced_item_from_id($invoice_id);
+            $results = $invoice_database->get_invoiced_items_from_id($invoice_id);
             break;
 
         case "invoiced-items-basic-ids":
