@@ -68,6 +68,33 @@ class AllDatabases
         $this->db_utility = $db_utility;
     }
 
+    public function get_coordinates_from_postcode($postcode) {
+        $query = "SELECT latitude, longitude FROM postcodelatlng WHERE REPLACE(postcode, ' ', '') = ?";
+        $params = [
+            ['type' => 's', 'value' => $postcode]
+        ];
+        $coordinates = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $coordinates;
+    }
+
+    public function get_customer_postcode_from_id($customer_id) {
+        $query = 'SELECT postcode FROM customers WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $customer_id]
+        ];
+        $postcode = $this->db_utility->execute_query($query, $params, 'assoc-array')['postcode'];
+        return str_replace(' ', '', $postcode);
+    }
+
+    public function get_postcode_from_warehouse_id($warehouse_id) {
+        $query = 'SELECT postcode FROM warehouse WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $warehouse_id]
+        ];
+        $postcode = $this->db_utility->execute_query($query, $params, 'assoc-array')['postcode'];
+        return str_replace(' ', '', $postcode);
+    }
+
     public function append_or_add($table, $id, $column)
     {
         $query = 'SELECT * FROM ' . $table . ' WHERE ' . $column . ' = ?';
@@ -725,18 +752,14 @@ class InvoiceDatabase
         customers.forename,
         customers.surname,
         customers.outstanding_balance,
-        customer_address.invoice_address_one,
-        customer_address.invoice_address_two,
-        customer_address.invoice_address_three,
-        customer_address.invoice_postcode,
-        customer_address.delivery_address_one,
-        customer_address.delivery_address_two,
-        customer_address.delivery_address_three,
-        customer_address.delivery_postcode
+        customers.address_line_1,
+        customers.address_line_2,
+        customers.address_line_3,
+        customers.address_line_4,
+        customers.postcode
       FROM
         invoices
         INNER JOIN customers ON invoices.customer_id = customers.id
-        INNER JOIN customer_address ON customer_address.customer_id = invoices.customer_id
       WHERE
         invoices.id = ?';
 

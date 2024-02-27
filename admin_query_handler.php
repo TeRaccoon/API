@@ -193,8 +193,24 @@ function run_query() {
         case "brands":
             $results = $retail_items_database->brands();
             break;
+
+        case 'calculate-distance':
+            $customer_id = urldecode($_GET['customer_id']);
+            $warehouse_id = urldecode($_GET['warehouse_id']);
+            $results = get_warehouse_customer_coordinates($all_databases, $customer_id, $warehouse_id);
+            break;
     }
     echo json_encode($results);
+}
+
+function get_warehouse_customer_coordinates($all_databases, $customer_id, $warehouse_id) {
+    $customer_postcode = $all_databases->get_customer_postcode_from_id($customer_id);
+    $warehouse_postcode = $all_databases->get_postcode_from_warehouse_id($warehouse_id);
+
+    $customer_coordinates = $all_databases->get_coordinates_from_postcode($customer_postcode);
+    $warehouse_coordinates = $all_databases->get_coordinates_from_postcode($warehouse_postcode);
+
+    return array('customer_postcode' => $customer_postcode, 'customer_coordinates' => $customer_coordinates, 'warehouse_postcode' => $warehouse_postcode, 'warehouse_coordinates' => $warehouse_coordinates);
 }
 
 function construct_edit_form($table_name, $all_databases) {
