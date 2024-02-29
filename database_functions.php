@@ -83,6 +83,15 @@ class AllDatabases
         return $data;
     }
 
+    public function get_warehouse_name_from_id($warehouse_id) {
+        $query = 'SELECT name FROM warehouse WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $warehouse_id]
+        ];
+        $warehouse_name = $this->db_utility->execute_query($query, $params, 'assoc-array')['name'];
+        return $warehouse_name;
+    }
+
     public function get_customer_postcode_from_id($customer_id) {
         $query = 'SELECT postcode FROM customers WHERE id = ?';
         $params = [
@@ -340,6 +349,15 @@ class CustomerDatabase
         $query = 'SELECT id, account_name AS replacement FROM customers ORDER BY replacement ASC';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
+    }
+
+    public function get_customer_delivery_info($customer_id) {
+        $query = 'SELECT account_name, address_line_1, address_line_2, address_line_3, address_line_4, postcode FROM customers WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $customer_id]
+        ];
+        $customer_address_info = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $customer_address_info;
     }
 }
 class ItemDatabase
@@ -754,6 +772,14 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, null, 'assoc-array');
     }
 
+    public function get_delivery_date_from_id($invoice_id) {
+        $query = 'SELECT delivery_date FROM invoices WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $invoice_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array')['delivery_date'];
+    }
+
     public function get_invoice_info($invoice_id)
     {
         $query = 'SELECT
@@ -764,6 +790,7 @@ class InvoiceDatabase
         invoices.vat,
         invoices.delivery_date,
         invoices.created_at,
+        invoices.warehouse_id,
         customers.forename,
         customers.surname,
         customers.outstanding_balance,
@@ -786,6 +813,17 @@ class InvoiceDatabase
         return $invoice_data;
     }
 
+    public function get_warehouse_id($invoice_id) {
+        $query = 'SELECT warehouse_id FROM invoices WHERE id = ?';
+
+        $params = [
+            ['type' => 'i', 'value' => $invoice_id]
+        ];
+
+        $warehouse_id = $this->db_utility->execute_query($query, $params, 'assoc-array')['warehouse_id'];
+        return $warehouse_id;
+    }
+
     public function get_next_invoice_id($table_name) {
         $query = 'SELECT MAX(id) + 1 AS next_id FROM ' . $table_name;
 
@@ -797,7 +835,8 @@ class InvoiceDatabase
         $query = 'SELECT 
             ii.id AS id,
             ii.quantity AS quantity, 
-            it.item_name AS name
+            it.item_name AS name,
+            ii.vat_charge as vat
         FROM 
             invoiced_items AS ii 
         INNER JOIN 

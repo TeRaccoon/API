@@ -109,6 +109,11 @@ function run_query() {
             $results = $invoice_database->get_invoice_info($invoice_id);
             break;
 
+        case "delivery-info":
+            $invoice_id = urldecode($_GET['filter']);
+            $results = get_delivery_info($all_databases, $invoice_database, $customer_database, $invoice_id);
+            break;
+
         case "invoice-products":
             $invoice_id = urldecode($_GET['filter']);
             $results = $invoice_database->get_invoice_products($invoice_id);
@@ -205,6 +210,32 @@ function run_query() {
             break;
     }
     echo json_encode($results);
+}
+
+function get_delivery_info($all_databases, $invoice_database, $customer_database, $invoice_id) {
+    $customer_id = $invoice_database->get_customer_id($invoice_id);
+    $warehouse_id = $invoice_database->get_warehouse_id($invoice_id);
+    $warehouse_name = $all_databases->get_warehouse_name_from_id($warehouse_id);
+
+    $customer_delivery_info = $customer_database->get_customer_delivery_info($customer_id);
+    $customer_postcode = $all_databases->get_customer_postcode_from_id($customer_id);
+
+    $delivery_date = $invoice_database->get_delivery_date_from_id($invoice_id);
+
+    $warehouse_postcode = $all_databases->get_postcode_from_warehouse_id($warehouse_id);
+
+    $customer_coordinates = $all_databases->get_coordinates_from_postcode($customer_postcode);
+    $warehouse_coordinates = $all_databases->get_coordinates_from_postcode($warehouse_postcode);
+
+    return array(
+        'customer_id' => $customer_id,
+        'delivery_info' => $customer_delivery_info,
+        'delivery_date' => $delivery_date,
+        'customer_postcode' => $customer_postcode,
+        'customer_coordinates' => $customer_coordinates,
+        'warehouse_postcode' => $warehouse_postcode,
+        'warehouse_name' => $warehouse_name,
+        'warehouse_coordinates' => $warehouse_coordinates);
 }
 
 function get_warehouse_customer_coordinates($all_databases, $customer_id, $warehouse_id) {
