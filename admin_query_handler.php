@@ -126,6 +126,10 @@ function run_query() {
             $results = $all_databases->get_page_section_id_names();
             break;
 
+        case "warehouse_id_name":
+            $results = $all_databases->get_warehouse_id_names();
+            break;
+
         case "retail_item_id_name":
             $results = $all_databases->get_retail_item_id_names();
             break;
@@ -336,6 +340,10 @@ function get_display_data($data, $table_name, $all_databases) {
                 
                 case "page_sections":
                     $assoc_table_data = $all_databases->get_page_section_names();
+                    break;
+
+                case "warehouse":
+                    $assoc_table_data = $all_databases->get_warehouse_names();
                     break;
                 
                 // case "retail_items":

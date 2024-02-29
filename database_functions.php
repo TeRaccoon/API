@@ -77,6 +77,12 @@ class AllDatabases
         return $coordinates;
     }
 
+    public function get_warehouse_id_names() {
+        $query = 'SELECT id, name AS replacement FROM warehouse ORDER BY replacement ASC';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
+
     public function get_customer_postcode_from_id($customer_id) {
         $query = 'SELECT postcode FROM customers WHERE id = ?';
         $params = [
@@ -161,6 +167,12 @@ class AllDatabases
         return $this->format_data('name', $names);
     }
 
+    function get_warehouse_names() {
+        $query = 'SELECT id, name FROM warehouse';
+        $names = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $this->format_data('name', $names);
+    }
+
     function get_invoice_titles()
     {
         $query = 'SELECT id, title FROM invoices';
@@ -184,6 +196,9 @@ class AllDatabases
     function format_data($key, $incoming_data)
     {
         $data = [];
+        if (!array_key_exists(0, $incoming_data)) {
+            $incoming_data = [$incoming_data];
+        }
         foreach ($incoming_data as $row) {
             $data[$row["id"]] = $row[$key];
         }
