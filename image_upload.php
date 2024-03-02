@@ -7,11 +7,7 @@ if ($_FILES['image']) {
     $image_tmp_name = $_FILES['image']['tmp_name'];
     $error = $_FILES['image']['error'];
     if ($error > 0) {
-        $response = array(
-            "status" => "error",
-            "error" => true,
-            "message" => "Error uploading the file!"
-        );
+        $response = array('success' => false, 'message' => 'There was an error processing the file! The file type may not be valid. Please try a different image or changing the type of the image.');
     } else {
         $uploadDir = '../uploads/';
         $uploadFile = $uploadDir . basename($image_name);
