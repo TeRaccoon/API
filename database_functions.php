@@ -792,7 +792,7 @@ class InvoiceDatabase
     }
 
     public function get_invoices_due_today_ids() {
-        $query = 'SELECT id FROM invoices WHERE due_date = CURDATE()';
+        $query = 'SELECT id FROM invoices WHERE delivery_date = CURDATE()';
         $invoice_ids = $this->db_utility->execute_query($query, null, 'array');
         return $invoice_ids;
     }
@@ -814,7 +814,6 @@ class InvoiceDatabase
     {
         $query = 'SELECT
         invoices.title,
-        invoices.due_date,
         invoices.net_value,
         invoices.total,
         invoices.vat,
@@ -992,7 +991,7 @@ class InvoiceDatabase
 
     public function get_invoices_due($age)
     {
-        $query = 'SELECT id, title FROM invoices WHERE due_date >= DATE_SUB(NOW(), INTERVAL ? DAY)';
+        $query = 'SELECT id, title FROM invoices WHERE delivery_date >= DATE_SUB(NOW(), INTERVAL ? DAY)';
         $params = [
             ['type' => 'i', 'value' => $age]
         ];
@@ -1005,7 +1004,7 @@ class InvoiceDatabase
         $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount, MAX(i.created_at) AS latest_created_at
         FROM invoices AS i
         INNER JOIN customers AS c ON i.customer_id = c.id
-        WHERE i.payment_status = "No" AND i.created_at >= (CURDATE()) - INTERVAL ? DAY AND i.created_at <= (CURDATE()) - INTERVAL ? DAY AND i.due_date < (CURDATE())
+        WHERE i.payment_status = "No" AND i.created_at >= (CURDATE()) - INTERVAL ? DAY AND i.created_at <= (CURDATE()) - INTERVAL ? DAY AND i.delivery_date < (CURDATE())
         GROUP BY c.id';
 
         $params = [
@@ -1021,7 +1020,7 @@ class InvoiceDatabase
         $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount, MAX(i.created_at) AS latest_created_at
         FROM invoices AS i
         INNER JOIN customers AS c ON i.customer_id = c.id
-        WHERE i.payment_status = "No" AND i.created_at < (CURDATE()) - INTERVAL ? DAY AND i.due_date < (CURDATE())
+        WHERE i.payment_status = "No" AND i.created_at < (CURDATE()) - INTERVAL ? DAY AND i.delivery_date < (CURDATE())
         GROUP BY c.id';
 
         $params = [
@@ -1033,7 +1032,7 @@ class InvoiceDatabase
 
     public function get_creditor_data($startDay, $endDay)
     {
-        $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.created_at >= curdate() - INTERVAL ? DAY AND i.created_at < curdate() - INTERVAL ? DAY AND i.customer_id = c.id AND i.payment_status = "No" AND i.due_date < curdate() GROUP BY c.id';
+        $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.created_at >= curdate() - INTERVAL ? DAY AND i.created_at < curdate() - INTERVAL ? DAY AND i.customer_id = c.id AND i.payment_status = "No" AND i.delivery_date < curdate() GROUP BY c.id';
         $params = [
             ['type' => 's', 'value' => $endDay],
             ['type' => 's', 'value' => $startDay]

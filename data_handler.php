@@ -89,7 +89,6 @@ function get_row_contents($conn, $query_string) {
 function get_invoice_info($conn, $invoice_id) {
   $query_string = "SELECT
   invoices.title,
-  invoices.due_date,
   invoices.net_value,
   invoices.total,
   invoices.vat,
