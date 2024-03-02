@@ -396,6 +396,36 @@ class ItemDatabase
       return $item_data;
     }
 
+    function get_stock_from_item_id($item_id) {
+        $query = 'SELECT
+        si.id,
+        items.item_name,
+        si.quantity,
+        si.expiry_date,
+        si.packing_format,
+        si.barcode,
+        wh.name AS warehouse_name
+      FROM 
+        stocked_items AS si
+      INNER JOIN
+        items
+      ON
+        items.id = si.item_id
+      INNER JOIN
+        warehouse AS wh
+      ON
+        si.warehouse_id = wh.id
+      WHERE
+        si.item_id = ?';
+
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+
+        $stock_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $stock_data;
+    }
+
     function get_least_income_item() {
         $query = 'SELECT 
         item_name, 

@@ -104,6 +104,11 @@ function run_query() {
             $results = $invoice_database->get_item_month_totals($_GET['month'], $_GET['year']);
             break;
 
+        case "stocked-items":
+            $item_id = urldecode($_GET['filter']);
+            $results = $items_database->get_stock_from_item_id($item_id);
+            break;
+
         case "invoice-info":
             $invoice_id = urldecode($_GET['filter']);
             $results = $invoice_database->get_invoice_info($invoice_id);
@@ -228,7 +233,7 @@ function get_delivery_info($all_databases, $invoice_database, $customer_database
     $warehouse_coordinates = $all_databases->get_coordinates_from_postcode($warehouse_postcode);
 
     return array(
-        'customer_id' => $customer_id,
+        'invoice_id' => $invoice_id,
         'delivery_info' => $customer_delivery_info,
         'delivery_date' => $delivery_date,
         'customer_postcode' => $customer_postcode,
