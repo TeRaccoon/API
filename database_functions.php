@@ -68,6 +68,12 @@ class AllDatabases
         $this->db_utility = $db_utility;
     }
 
+    public function get_total_stock() {
+        $query = 'SELECT item_id, SUM(quantity) AS total_quantity FROM stocked_items GROUP BY item_id';
+        $results = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $results;
+    }
+
     public function get_coordinates_from_postcode($postcode) {
         $query = "SELECT latitude, longitude FROM postcodelatlng WHERE REPLACE(postcode, ' ', '') = ?";
         $params = [
@@ -369,8 +375,13 @@ class ItemDatabase
         $this->db_utility = $db_utility;
     }
 
+    function get_products_expiring_soon() {
+        $query = 'SELECT i.item_name, si.expiry_date, si.quantity, wh.name FROM stocked_items AS si INNER JOIN items AS i ON si.item_id = i.id INNER JOIN warehouse AS wh ON si.warehouse_id = wh.id WHERE si.expiry_date < (CURDATE() + 30)';
+        return $this->db_utility->execute_query($query, null, 'assoc-array');
+    }
+
     function get_low_stock_items() {
-        $query = 'SELECT * FROM stocked_items WHERE quantity < 10';
+        $query = 'SELECT i.item_name, si.quantity, wh.name FROM stocked_items AS si INNER JOIN items AS i ON si.item_id = i.id INNER JOIN warehouse AS wh ON si.warehouse_id = wh.id WHERE si.quantity < 10';
         $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $item_data;
     }
@@ -808,6 +819,11 @@ class InvoiceDatabase
             ['type' => 'i', 'value' => $invoice_id]
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array')['delivery_date'];
+    }
+
+    public function get_invoices_due_today_basic() {
+        $query = 'SELECT i.id, c.account_name, i.printed, i.payment_status FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.delivery_date = (CURDATE())';
+        return $this->db_utility->execute_query($query, null, 'assoc-array');
     }
 
     public function get_invoice_info($invoice_id)

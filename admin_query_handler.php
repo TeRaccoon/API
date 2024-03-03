@@ -86,6 +86,10 @@ function run_query() {
             $results = $all_databases->get_profit_loss($_GET['start-date'], $_GET['end-date']);
             break;
 
+        case "total-stock":
+            $results = $all_databases->get_total_stock();
+            break;
+
         case "invoices-due":
             $age = urldecode($_GET['filter']);
             $results = $invoice_database->get_invoices_due($age);
@@ -112,6 +116,10 @@ function run_query() {
         case "invoice-info":
             $invoice_id = urldecode($_GET['filter']);
             $results = $invoice_database->get_invoice_info($invoice_id);
+            break;
+
+        case "invoices-due-today-basic":
+            $results = $invoice_database->get_invoices_due_today_basic();
             break;
 
         case "delivery-info":
@@ -170,6 +178,10 @@ function run_query() {
 
         case "low-stock":
             $results = $items_database->get_low_stock_items();
+            break;
+
+        case "products-expiring-soon":
+            $results = $items_database->get_products_expiring_soon();
             break;
 
         case "invoiced-items":
