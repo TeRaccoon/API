@@ -881,7 +881,8 @@ class InvoiceDatabase
             ii.id AS id,
             ii.quantity AS quantity, 
             it.item_name AS name,
-            ii.vat_charge as vat
+            ii.vat_charge AS vat,
+            it.image_file_name AS image_file_name
         FROM 
             invoiced_items AS ii 
         INNER JOIN 
