@@ -288,9 +288,11 @@ function login($user_database, $data)
 
     $password_hash = $user_database->get_user_password($username);
     if ($password_hash != null && password_verify($password, $password_hash)) {
+        $access_level = $user_database->get_access_level($username);
+        
         $_SESSION['user'] = 'authenticated';
         $_SESSION['username'] = $username;
-        $response = array('success' => true, 'message' => 'Login successful');
+        $response = array('success' => true, 'message' => 'Login successful', 'data' => $access_level);
     } else {
         $response = array('success' => false, 'message' => 'Invalid credentials');
     }
