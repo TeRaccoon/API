@@ -113,6 +113,10 @@ function run_query() {
             $results = $items_database->get_stock_from_item_id($item_id);
             break;
 
+        case "stocked-item-images":
+            $results = $items_database->get_images_from_stocked_items();
+            break;
+
         case "invoice-info":
             $invoice_id = urldecode($_GET['filter']);
             $results = $invoice_database->get_invoice_info($invoice_id);
