@@ -58,7 +58,7 @@ if (isset($data['action'])) {
             break;
 
         case 'check-login':
-            check_login();
+            $response = check_login($user_database);
             break;
 
         case 'change-password':
@@ -264,16 +264,16 @@ function get_row_contents($conn, $query_string)
     return $contents;
 }
 
-function check_login() {
+function check_login($user_database) {
     if (isset($_SESSION['user']) && $_SESSION['user']) {
-        $response = array('success' => true, 'message' => 'User logged in');
+        $access_level = $user_database->get_access_level($_SESSION['username']);
+        $response = array('success' => true, 'message' => 'User logged in', 'data' => $access_level);
     }
     else {
         $response = array('success' => false, 'message' => 'No previous logins');
     }
     
-    echo json_encode($response);
-    exit();
+    return $response;
 }
 
 function logout() {

@@ -943,6 +943,7 @@ class InvoiceDatabase
     {
         $query = 'SELECT
         items.item_name,
+        items.image_file_name AS file_name,
         items.retail_price AS price,
         invoiced_items.quantity,
         invoiced_items.vat_charge
