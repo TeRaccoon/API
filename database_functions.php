@@ -376,8 +376,15 @@ class ItemDatabase
     }
 
     function get_products_expiring_soon() {
-        $query = 'SELECT i.item_name, si.expiry_date, si.quantity, wh.name FROM stocked_items AS si INNER JOIN items AS i ON si.item_id = i.id INNER JOIN warehouse AS wh ON si.warehouse_id = wh.id WHERE si.expiry_date < (CURDATE() + 30)';
-        return $this->db_utility->execute_query($query, null, 'assoc-array');
+        $query = 'SELECT expiry_warning_days FROM settings';
+        $expiry_days = $this->db_utility->execute_query($query, null, 'assoc-array')['expiry_warning_days'];
+
+        $query = 'SELECT i.item_name, si.expiry_date, si.quantity, wh.name FROM stocked_items AS si INNER JOIN items AS i ON si.item_id = i.id INNER JOIN warehouse AS wh ON si.warehouse_id = wh.id WHERE si.expiry_date < (CURDATE() + ?)';
+        $params = [
+            ['type' => 'i', 'value' => $expiry_days]
+        ];
+        
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
     function get_low_stock_items() {
@@ -471,6 +478,12 @@ class ItemDatabase
 
         $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $item_data;
+    }
+
+    public function get_images_from_stocked_items()
+    {
+        $query = 'SELECT it.item_name AS item_id, it.image_file_name AS file_name FROM stocked_items AS si INNER JOIN items AS it ON si.item_id = it.id';
+        return $this->db_utility->execute_query($query, null, 'assoc-array');
     }
 
     function get_total_sold($item_id)
