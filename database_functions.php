@@ -626,7 +626,7 @@ class RetailItemsDatabase
     }
 
     public function brands() {
-        $query = 'SELECT DISTINCT brand FROM retail_items WHERE brand IS NOT NULL';
+        $query = 'SELECT DISTINCT brand FROM items WHERE brand IS NOT NULL';
         return $this->db_utility->execute_query($query, null, 'array');
     }
     
@@ -640,14 +640,14 @@ class RetailItemsDatabase
 
     public function get_categories()
     {
-        $query = 'SELECT DISTINCT category FROM retail_items ORDER BY category';
+        $query = 'SELECT DISTINCT category FROM items ORDER BY category';
         $categories = $this->db_utility->execute_query($query, null, 'array');
         return $categories;
     }
 
     public function get_subcategories()
     {
-        $query = 'SELECT DISTINCT sub_category FROM retail_items WHERE sub_category IS NOT NULL ORDER BY sub_category';
+        $query = 'SELECT DISTINCT sub_category FROM items WHERE sub_category IS NOT NULL ORDER BY sub_category';
         $subcategories = $this->db_utility->execute_query($query, null, 'array');
         return $subcategories;
     }
@@ -683,7 +683,7 @@ class RetailItemsDatabase
 
     public function get_products_from_category($category)
     {
-        $query = 'SELECT ri.image_file_name AS image_location, ri.brand, ri.discount, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE ri.category = ? OR ri.sub_category = ?';
+        $query = 'SELECT ri.image_file_name AS image_location, i.brand, ri.discount, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE i.category = ? OR i.sub_category = ?';
         $params = [
             ['type' => 's', 'value' => $category],
             ['type' => 's', 'value' => $category]
@@ -694,7 +694,7 @@ class RetailItemsDatabase
 
     public function get_products()
     {
-        $query = 'SELECT ri.image_file_name AS image_location, ri.brand, ri.discount, ri.category, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id';
+        $query = 'SELECT ri.image_file_name AS image_location, i.brand, ri.discount, i.category, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id';
         $product_names = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $product_names;
     }
@@ -729,7 +729,7 @@ class RetailItemsDatabase
 
     public function get_product_from_name($product_name)
     {
-        $query = 'SELECT ri.id, ri.category, ri.sub_category, ri.description, ri.brand, ri.discount, ri.item_id, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items as i ON ri.item_id = i.id WHERE i.item_name = ?';
+        $query = 'SELECT ri.id, i.category, i.sub_category, ri.description, i.brand, ri.discount, ri.item_id, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items as i ON ri.item_id = i.id WHERE i.item_name = ?';
         $params = [
             ['type' => 's', 'value' => $product_name]
         ];
