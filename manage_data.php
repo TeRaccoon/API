@@ -54,7 +54,7 @@ if (isset($data['action'])) {
             break;
 
         case 'logout':
-            logout();
+            $response = logout();
             break;
 
         case 'check-login':
@@ -278,7 +278,7 @@ function check_login() {
 
 function logout() {
     session_destroy();
-    return "Session cleared successfully!";
+    return array('success' => true, 'message' => 'Logout successful');
 }
 
 function login($user_database, $data)
