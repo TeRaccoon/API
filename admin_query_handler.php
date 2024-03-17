@@ -224,6 +224,10 @@ function run_query() {
             $results = $retail_items_database->brands();
             break;
 
+        case 'categories':
+            $results = $items_database->categories();
+            break;
+
         case 'calculate-distance':
             $customer_id = urldecode($_GET['customer_id']);
             $warehouse_id = urldecode($_GET['warehouse_id']);

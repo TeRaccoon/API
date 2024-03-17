@@ -472,6 +472,11 @@ class ItemDatabase
         return $item_data;
     }
 
+    public function categories() {
+        $query = 'SELECT DISTINCT name FROM categories';
+        return $this->db_utility->execute_query($query, null, 'array');
+    }
+
     function get_top_selling_item()
     {
         $query = 'SELECT item_name, unit_cost, retail_price, wholesale_price, ((retail_price - unit_cost) / retail_price) AS retail_margin, ((wholesale_price - unit_cost) / wholesale_price) AS wholesale_margin, total_sold, total_sold * (retail_price - unit_cost) AS total_income  FROM items WHERE total_sold = ( SELECT MAX(total_sold) FROM items) LIMIT 1';
@@ -637,11 +642,9 @@ class RetailItemsDatabase
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array')['id'];
     }
-
-    public function get_categories()
-    {
-        $query = 'SELECT DISTINCT category FROM items ORDER BY category';
-        $categories = $this->db_utility->execute_query($query, null, 'array');
+    public function get_visible_categories() {
+        $query = 'SELECT name, image_file_name AS location FROM categories WHERE visible = "Yes"';
+        $categories = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $categories;
     }
 
@@ -683,7 +686,7 @@ class RetailItemsDatabase
 
     public function get_products_from_category($category)
     {
-        $query = 'SELECT ri.image_file_name AS image_location, i.brand, ri.discount, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE i.category = ? OR i.sub_category = ?';
+        $query = 'SELECT i.image_file_name AS image_location, i.brand, ri.discount, i.item_name AS name, i.retail_price AS price FROM items AS i INNER JOIN retail_items AS ri ON ri.item_id = i.id WHERE i.category = ? OR i.sub_category = ?';
         $params = [
             ['type' => 's', 'value' => $category],
             ['type' => 's', 'value' => $category]

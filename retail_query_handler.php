@@ -58,14 +58,18 @@ function run_query() {
     $retail_items_database = new RetailItemsDatabase($database_utility);
     $image_locations_database = new ImageLocationsDatabase($database_utility);
     $page_sections_database = new PageSectionsDatabase($database_utility);
-    $retail_user_database = new RetailUserDatabase($database_utility);
+    $items_database = new ItemDatabase($database_utility);
     $customer_database = new CustomerDatabase($database_utility);
 
     $conn->connect();
     $results = null;
     switch ($query) {
         case 'categories':
-            $results = $retail_items_database->get_categories();
+            $results = $items_database->categories();
+            break;
+
+        case 'visible-categories':
+            $results = $retail_items_database->get_visible_categories();
             break;
 
         case 'subcategories':
