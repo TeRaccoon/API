@@ -538,7 +538,7 @@ class ItemDatabase
     }
     function get_invoiced_items_data($invoiced_item_id)
     {
-        $query = 'SELECT item_id, quantity, vat_charge, invoice_id FROM invoiced_items WHERE id = ?';
+        $query = 'SELECT item_id, quantity, settings.vat_charge, invoice_id FROM invoiced_items INNER JOIN settings WHERE invoiced_items.id = ?';
         $params = [
             ['type' => 'i', 'value' => $invoiced_item_id]
         ];
@@ -897,14 +897,13 @@ class InvoiceDatabase
             ii.id AS id,
             ii.quantity AS quantity, 
             it.item_name AS name,
-            ii.vat_charge AS vat,
+            settings.vat_charge AS vat,
             it.image_file_name AS image_file_name
         FROM 
             invoiced_items AS ii 
-        INNER JOIN 
-            items AS it ON ii.item_id = it.id 
-        INNER JOIN 
-            invoices AS inv ON ii.invoice_id = inv.id 
+        INNER JOIN items AS it ON ii.item_id = it.id 
+        INNER JOIN invoices AS inv ON ii.invoice_id = inv.id 
+        INNER JOIN settings
         WHERE 
             inv.id = ?';
 
@@ -924,13 +923,13 @@ class InvoiceDatabase
                     ii.quantity AS quantity, 
                     it.item_name AS name,
                     inv.id AS title 
-                  FROM 
+                FROM 
                     invoiced_items AS ii 
-                  INNER JOIN 
+                INNER JOIN 
                     items AS it ON ii.item_id = it.id 
-                  INNER JOIN 
+                INNER JOIN 
                     invoices AS inv ON ii.invoice_id = inv.id 
-                  WHERE
+                WHERE
                     inv.id IN (' . $placeholders . ')';
     
         $params = [];
@@ -949,11 +948,12 @@ class InvoiceDatabase
         items.image_file_name AS file_name,
         items.retail_price AS price,
         invoiced_items.quantity,
-        invoiced_items.vat_charge
+        settings.vat_charge AS vat_charge
         FROM
         invoices
         INNER JOIN invoiced_items ON invoices.id = invoiced_items.invoice_id
         INNER JOIN items ON invoiced_items.item_id = items.id
+        INNER JOIN settings
         WHERE
         invoices.id = ?';
 
