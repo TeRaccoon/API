@@ -561,6 +561,13 @@ class ItemDatabase
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
+
+    function get_id_names_sku()
+    {
+        $query = 'SELECT id, CONCAT(item_name, " - ", stock_code) AS replacement FROM items ORDER BY replacement ASC';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
 }
 
 class CustomerPaymentsDatabase

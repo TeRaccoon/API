@@ -140,6 +140,10 @@ function run_query() {
             $results = $items_database->get_id_names();
             break;
 
+        case 'items_id_name_sku':
+            $results = $items_database->get_id_names_sku();
+            break;
+
         case "customers_id_name":
             $results = $customer_database->get_id_names();
             break;
