@@ -74,6 +74,12 @@ class AllDatabases
         return $results;
     }
 
+    public function get_offer_id_name() {
+        $query = 'SELECT id, name AS replacement FROM offers ORDER BY replacement ASC';
+        $results = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $results;
+    }
+
     public function get_coordinates_from_postcode($postcode) {
         $query = "SELECT latitude, longitude FROM postcodelatlng WHERE REPLACE(postcode, ' ', '') = ?";
         $params = [
@@ -905,7 +911,8 @@ class InvoiceDatabase
             ii.quantity AS quantity, 
             it.item_name AS name,
             settings.vat_charge AS vat,
-            it.image_file_name AS image_file_name
+            it.image_file_name AS image_file_name,
+            ii.discount AS discount
         FROM 
             invoiced_items AS ii 
         INNER JOIN items AS it ON ii.item_id = it.id 
