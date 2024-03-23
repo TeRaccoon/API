@@ -160,6 +160,7 @@ function synchronise($conn, $table_name, $id, $query_string)
     $item_database = new ItemDatabase($database_utility);
     $invoice_database = new InvoiceDatabase($database_utility);
     $customer_payments_database = new CustomerPaymentsDatabase($database_utility);
+    $retail_items_database = new RetailItemsDatabase($database_utility);
 
     $action = $_POST['action'];
 
@@ -179,7 +180,7 @@ function synchronise($conn, $table_name, $id, $query_string)
                 }
                 $customer_id = $invoice_database->get_customer_id($invoiced_item_data['invoice_id']);
 
-                update_invoiced_item($customer_database, $item_database, $invoiced_item_data, $customer_id);
+                update_invoiced_item($customer_database, $item_database, $retail_items_database, $invoiced_item_data, $customer_id);
             }
 
             if (!$conn->commit()) {
@@ -225,20 +226,44 @@ function update_customer_payment($invoice_database, $customer_database, $custome
         $total_invoice_payments = $customer_payments_database->get_total_invoice_payments($invoice_id);
     }
 }
-function update_invoiced_item($customer_database, $item_database, $invoiced_item_data, $customer_id)
+function update_invoiced_item($customer_database, $item_database, $retail_item_database, $invoiced_item_data, $customer_id)
 {
     $discount = $customer_database->get_customer_discount($customer_id);
     $invoice_values = get_invoice_value($item_database, $invoiced_item_data, $discount);
 
     $item_id = $invoiced_item_data["item_id"];
 
-    //Ammending item_invoice total to applied invoice
+    //Amending item_invoice total to applied invoice
     $customer_database->set_invoice_values($invoice_values[0], $invoice_values[1], $invoice_values[2], $invoiced_item_data["invoice_id"]);
 
+    //Check offer can expire
+    $new_total_sold = $item_database->get_calculated_total_sold($item_id);
+    manage_offers($item_database, $retail_item_database, $item_id, $new_total_sold);
+
     //Appending total sold
-    $total_sold = $item_database->get_calculated_total_sold($item_id);
-    $item_database->set_total_sold($total_sold, $item_id);
+    $item_database->set_total_sold($new_total_sold, $item_id);
 }
+
+function manage_offers($item_database, $retail_item_database, $item_id, $new_total_sold) {
+    $current_total_sold = $item_database->get_total_sold($item_id);
+    $sold_difference = $new_total_sold - $current_total_sold;
+    $offer_data = $retail_item_database->get_offer_from_item($item_id);
+    
+    if ($offer_data == null || $offer_data['quantity_limit'] == 0 || $offer_data['quantity_limit'] == 0 || $offer_data['offer_end'] == null) {
+        return;
+    }
+
+    $new_offer_quantity_limit = $offer_data['quantity_limit'] - $sold_difference;
+    if ($new_offer_quantity_limit > 0) 
+    {
+        $retail_item_database->set_offer_quantity_limit($item_id, $new_offer_quantity_limit);
+    }
+    else
+    {
+        $retail_item_database->reset_offer_from_item_id($item_id);
+    }
+}
+
 function get_invoice_value($item_database, $item_data, $discount)
 {
     $invoice_id = $item_data["invoice_id"];

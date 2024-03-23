@@ -658,6 +658,33 @@ class RetailItemsDatabase
         return $item_data;
     }
 
+    public function get_offer_from_item($item_id) 
+    {
+        $query = 'SELECT off.* FROM offers AS off INNER JOIN retail_items AS ri ON ri.offer_id = off.id WHERE ri.item_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function set_offer_quantity_limit($item_id, $quantity) {
+        $query = 'UPDATE offers AS off SET off.quantity_limit = ? WHERE off.id IN (SELECT ri.offer_id FROM retail_items AS ri WHERE ri.item_id = ?)';
+        $params = [
+            ['type' => 'i', 'value' => $quantity],
+            ['type' => 'i', 'value' => $item_id]
+        ];
+        $this->db_utility->execute_query($query, $params, false);
+    }
+
+    public function reset_offer_from_item_id($item_id)
+    {
+        $query = 'UPDATE offers AS off SET off.quantity_limit = null, off.offer_start = null, off.offer_end = null, off.active = "No" WHERE off.id IN (SELECT ri.offer_id FROM retail_items AS ri WHERE ri.item_id = ?)';
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+        $this->db_utility->execute_query($query, $params, false);
+    }
+
     public function brands() {
         $query = 'SELECT DISTINCT brand FROM items WHERE brand IS NOT NULL';
         return $this->db_utility->execute_query($query, null, 'array');
