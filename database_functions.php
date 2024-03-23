@@ -69,7 +69,22 @@ class AllDatabases
     }
 
     public function get_total_stock() {
-        $query = 'SELECT item_id, SUM(quantity) AS total_quantity FROM stocked_items GROUP BY item_id';
+        $query = 'SELECT 
+        si.item_id, 
+        SUM(
+            CASE 
+                WHEN si.packing_format = "Individual" THEN si.quantity
+                WHEN si.packing_format = "Box" THEN si.quantity * i.box_size
+                WHEN si.packing_format = "Pallet" THEN si.quantity * i.pallet_size
+            END
+        ) AS total_quantity 
+        FROM 
+            stocked_items si
+        JOIN 
+            items i ON si.item_id = i.id
+        GROUP BY 
+            si.item_id';
+
         $results = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $results;
     }
