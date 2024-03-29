@@ -775,7 +775,7 @@ class RetailItemsDatabase
     }
     public function get_top_products($limit)
     {
-        $query = 'SELECT i.id, i.item_name AS item_name, i.retail_price AS price, off.offer_start, off.offer_end, ri.discount, i.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id INNER JOIN offers AS off ON ri.offer_id = off.id ORDER BY i.total_sold DESC LIMIT 0, ?';
+        $query = 'SELECT ri.id, i.item_name AS item_name, i.retail_price AS price, off.offer_start, off.offer_end, ri.discount, i.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id INNER JOIN offers AS off ON ri.offer_id = off.id ORDER BY i.total_sold DESC LIMIT 0, ?';
         $params = [
             ['type' => 'i', 'value' => $limit]
         ];
@@ -785,7 +785,7 @@ class RetailItemsDatabase
 
     public function get_featured($limit)
     {
-        $query = "SELECT i.item_name AS item_name, i.stock_code AS stock_code, i.image_file_name, ri.discount, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE featured = 'Yes' AND visible = 'Yes' LIMIT 0, ?";
+        $query = "SELECT ri.id AS id, i.item_name AS item_name, i.stock_code AS stock_code, i.image_file_name, ri.discount, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE featured = 'Yes' AND visible = 'Yes' LIMIT 0, ?";
         $params = [
             ['type' => 'i', 'value' => $limit]
         ];
