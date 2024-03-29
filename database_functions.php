@@ -326,6 +326,28 @@ class CustomerDatabase
         return $details;
     }
 
+    function get_address_from_customer_id($customer_id) {
+        $query = 'SELECT 
+            invoice_address_one, 
+            invoice_address_two, 
+            invoice_address_three,
+            invoice_address_four,
+            invoice_postcode, 
+            delivery_address_one, 
+            delivery_address_two, 
+            delivery_address_three, 
+            delivery_address_four, 
+            delivery_postcode 
+        FROM 
+            customer_address 
+        WHERE 
+            customer_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $customer_id],
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
     function get_customer_id_from_email($email)
     {
         $query = 'SELECT id FROM customers WHERE email = ?';
@@ -465,6 +487,33 @@ class ItemDatabase
         return $stock_data;
     }
 
+    function get_total_stock_from_item_id($item_id) {
+        $query = 'SELECT 
+        si.item_id, 
+        SUM(
+            CASE 
+                WHEN si.packing_format = "Individual" THEN si.quantity
+                WHEN si.packing_format = "Box" THEN si.quantity * i.box_size
+                WHEN si.packing_format = "Pallet" THEN si.quantity * i.pallet_size
+            END
+        ) AS total_quantity 
+        FROM 
+            stocked_items si
+        JOIN 
+            items i ON si.item_id = i.id
+        WHERE
+            si.item_id = ?
+        GROUP BY 
+            si.item_id';
+
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+
+        $total_stock = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $total_stock;
+    }
+
     function get_least_income_item() {
         $query = 'SELECT 
         item_name, 
@@ -495,6 +544,11 @@ class ItemDatabase
 
     public function categories() {
         $query = 'SELECT DISTINCT name FROM categories';
+        return $this->db_utility->execute_query($query, null, 'array');
+    }
+
+    public function sub_categories() {
+        $query = 'SELECT DISTINCT name FROM sub_categories';
         return $this->db_utility->execute_query($query, null, 'array');
     }
 

@@ -113,6 +113,11 @@ function run_query() {
             $results = $items_database->get_stock_from_item_id($item_id);
             break;
 
+        case "total-stock-from-item-id":
+            $item_id = urldecode($_GET['filter']);
+            $results = $items_database->get_total_stock_from_item_id($item_id);
+            break;
+
         case "stocked-item-images":
             $results = $items_database->get_images_from_stocked_items();
             break;
@@ -234,6 +239,15 @@ function run_query() {
 
         case 'categories':
             $results = $items_database->categories();
+            break;
+
+        case 'sub-categories':
+            $results = $items_database->sub_categories();
+            break;
+
+        case 'addresses_from_customer_id':
+            $customer_id = urldecode($_GET['filter']);
+            $results = $customer_database->get_address_from_customer_id($customer_id);
             break;
 
         case 'calculate-distance':
