@@ -766,7 +766,7 @@ class RetailItemsDatabase
 
     public function get_product_from_id($id)
     {
-        $query = 'SELECT i.retail_price, ri.discount, ri.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE i.id = ?';
+        $query = 'SELECT i.retail_price, ri.discount, i.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE i.id = ?';
         $params = [
             ['type' => 'i', 'value' => $id]
         ];
@@ -775,7 +775,7 @@ class RetailItemsDatabase
     }
     public function get_top_products($limit)
     {
-        $query = 'SELECT i.id, i.item_name AS item_name, i.retail_price AS price, ri.offer_start, ri.offer_end, ri.discount, ri.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id ORDER BY i.total_sold DESC LIMIT 0, ?';
+        $query = 'SELECT i.id, i.item_name AS item_name, i.retail_price AS price, off.offer_start, off.offer_end, ri.discount, i.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id INNER JOIN offers AS off ON ri.offer_id = off.id ORDER BY i.total_sold DESC LIMIT 0, ?';
         $params = [
             ['type' => 'i', 'value' => $limit]
         ];
@@ -785,7 +785,7 @@ class RetailItemsDatabase
 
     public function get_featured($limit)
     {
-        $query = "SELECT i.item_name AS item_name, i.stock_code AS stock_code, ri.image_file_name, ri.discount, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE featured = 'Yes' AND visible = 'Yes' LIMIT 0, ?";
+        $query = "SELECT i.item_name AS item_name, i.stock_code AS stock_code, i.image_file_name, ri.discount, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE featured = 'Yes' AND visible = 'Yes' LIMIT 0, ?";
         $params = [
             ['type' => 'i', 'value' => $limit]
         ];
@@ -806,14 +806,14 @@ class RetailItemsDatabase
 
     public function get_products()
     {
-        $query = 'SELECT ri.image_file_name AS image_location, i.brand, ri.discount, i.category, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id';
+        $query = 'SELECT i.image_file_name AS image_location, i.brand, ri.discount, i.category, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id';
         $product_names = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $product_names;
     }
 
     public function get_product_view($product_name)
     {
-        $query = 'SELECT ri.image_file_name AS primary_image, ri.id, ri.discount FROM retail_items as ri INNER JOIN items AS i ON ri.item_id = i.id  WHERE i.item_name = ?';
+        $query = 'SELECT i.image_file_name AS primary_image, ri.id, ri.discount FROM retail_items as ri INNER JOIN items AS i ON ri.item_id = i.id  WHERE i.item_name = ?';
         $params = [
             ['type' => 's', 'value' => $product_name]
         ];
@@ -823,9 +823,9 @@ class RetailItemsDatabase
 
     public function get_product_view_images($retail_item_id)
     {
-        $query = 'SELECT ri.image_file_name AS image
+        $query = 'SELECT i.image_file_name AS image
         FROM retail_item_images AS rii
-        INNER JOIN retail_items AS ri ON rii.retail_item_id = ri.id
+        INNER JOIN items AS i ON rii.retail_item_id = i.id
         WHERE rii.retail_item_id = ?
         UNION
         SELECT rii.image_file_name AS image
