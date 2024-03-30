@@ -766,7 +766,7 @@ class RetailItemsDatabase
 
     public function get_product_from_id($id)
     {
-        $query = 'SELECT i.retail_price, ri.discount, i.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE i.id = ?';
+        $query = 'SELECT i.retail_price, ri.discount, i.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE ri.id = ?';
         $params = [
             ['type' => 'i', 'value' => $id]
         ];
@@ -795,7 +795,7 @@ class RetailItemsDatabase
 
     public function get_products_from_category($category)
     {
-        $query = 'SELECT i.image_file_name AS image_location, i.brand, ri.discount, i.item_name AS name, i.retail_price AS price FROM items AS i INNER JOIN retail_items AS ri ON ri.item_id = i.id WHERE i.category = ? OR i.sub_category = ?';
+        $query = 'SELECT ri.id AS id, i.image_file_name AS image_location, i.brand, ri.discount, i.item_name AS name, i.retail_price AS price FROM items AS i LEFT JOIN retail_items AS ri ON ri.item_id = i.id WHERE i.category = ? OR i.sub_category = ?';
         $params = [
             ['type' => 's', 'value' => $category],
             ['type' => 's', 'value' => $category]
@@ -823,14 +823,17 @@ class RetailItemsDatabase
 
     public function get_product_view_images($retail_item_id)
     {
-        $query = 'SELECT i.image_file_name AS image
-        FROM retail_item_images AS rii
-        INNER JOIN items AS i ON rii.retail_item_id = i.id
-        WHERE rii.retail_item_id = ?
-        UNION
-        SELECT rii.image_file_name AS image
-        FROM retail_item_images AS rii
-        WHERE rii.retail_item_id = ?';
+        $query = 'SELECT i.image_file_name AS image 
+        FROM items AS i 
+        INNER JOIN retail_items AS ri ON ri.item_id = i.id 
+        WHERE ri.id = ? 
+        UNION 
+        SELECT rii.image_file_name
+        FROM retail_item_images AS rii 
+        INNER JOIN retail_items AS ri ON ri.id = ? 
+        INNER JOIN items AS i ON i.id = ri.item_id 
+        WHERE rii.item_id = i.id;
+        ';
         $params = [
             ['type' => 'i', 'value' => $retail_item_id],
             ['type' => 'i', 'value' => $retail_item_id]
