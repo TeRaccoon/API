@@ -998,9 +998,11 @@ class InvoiceDatabase
     }
 
     public function get_next_invoice_id($table_name) {
-        $query = 'SELECT MAX(id) + 1 AS next_id FROM ' . $table_name;
+        $query = 'SET information_schema_stats_expiry = 0';
+        $this->db_utility->execute_query($query, null, false);
 
-        $next_id = $this->db_utility->execute_query($query, null, 'assoc-array');
+        $query = 'SELECT AUTO_INCREMENT AS next_id FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $table_name . '"';
+        $next_id = $this->db_utility->execute_query($query, null, 'assoc-array')['next_id'];
         return $next_id;
     }
 
