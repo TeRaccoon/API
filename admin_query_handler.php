@@ -296,46 +296,46 @@ function get_warehouse_customer_coordinates($all_databases, $customer_id, $wareh
 }
 
 function construct_edit_form($table_name, $all_databases) {
-    $edittable_display_names = [];
-    $edittable_data_types = [];
-    $edittable_required = [];
-    $edittable_field_names = [];
+    $editable_display_names = [];
+    $editable_data_types = [];
+    $editable_required = [];
+    $editable_field_names = [];
 
     $table_columns = $all_databases->get_columns($table_name);
     foreach ($table_columns as $key => $column) {
         if ($column['Extra'] == null) {
-            $edittable_display_names[] = $column['Comment'];
-            $edittable_field_names[] = $column['Field'];
+            $editable_display_names[] = $column['Comment'];
+            $editable_field_names[] = $column['Field'];
             if ($column['Field'] == 'image_file_name') {
-                $edittable_data_types[] = 'file';
+                $editable_data_types[] = 'file';
             } else {
-                $edittable_data_types[] = $column['Type'];
+                $editable_data_types[] = $column['Type'];
             }
             if ($column['Null'] == "NO") {
-                $edittable_required[] = true;
+                $editable_required[] = true;
             } else {
-                $edittable_required[] = false;
+                $editable_required[] = false;
             }
         }
     }
 
-    $edittable_columns = get_edittable_columns($table_name, $all_databases);
+    $editable_columns = get_editable_columns($table_name, $all_databases);
     return [
-        'columns' => $edittable_columns,
-        'fields' => $edittable_field_names,
-        'types' => $edittable_data_types,
-        'names' => $edittable_display_names,
-        'required' => $edittable_required
+        'columns' => $editable_columns,
+        'fields' => $editable_field_names,
+        'types' => $editable_data_types,
+        'names' => $editable_display_names,
+        'required' => $editable_required
     ];
 }
 
 function construct_table($all_databases) {
     $table_name = urldecode($_GET["filter"]);
     $formatted_names = [];
-    $edittable_display_names = [];
-    $edittable_data_types = [];
-    $edittable_required = [];
-    $edittable_field_names = [];
+    $editable_display_names = [];
+    $editable_data_types = [];
+    $editable_required = [];
+    $editable_field_names = [];
 
     $table_data = $all_databases->get_table_data($table_name);
     $table_columns = $all_databases->get_columns($table_name);
@@ -343,48 +343,48 @@ function construct_table($all_databases) {
         $formatted_names[] = $column['Comment'];
         $data_types[] = $column['Field'] == 'image_file_name' ? 'file' : $column['Type'];
         if ($column['Extra'] == null) {
-            $edittable_display_names[] = $column['Comment'];
-            $edittable_field_names[] = $column['Field'];
+            $editable_display_names[] = $column['Comment'];
+            $editable_field_names[] = $column['Field'];
             if ($column['Field'] == 'image_file_name') {
-                $edittable_data_types[] = 'file';
+                $editable_data_types[] = 'file';
             } else {
-                $edittable_data_types[] = $column['Type'];
+                $editable_data_types[] = $column['Type'];
             }
             if ($column['Null'] == "NO") {
-                $edittable_required[] = true;
+                $editable_required[] = true;
             } else {
-                $edittable_required[] = false;
+                $editable_required[] = false;
             }
         }
     }
 
     $display_data = get_display_data($table_data, $table_name, $all_databases);
-    $edittable_columns = get_edittable_columns($table_name, $all_databases);
+    $editable_columns = get_editable_columns($table_name, $all_databases);
 
     return [
         'display_data' => $display_data,
         'display_names' => $formatted_names,
         'data' => $table_data,
         'types' => $data_types,
-        'edittable' => [
-            'columns' => $edittable_columns,
-            'fields' => $edittable_field_names,
-            'types' => $edittable_data_types,
-            'names' => $edittable_display_names,
-            'required' => $edittable_required
+        'editable' => [
+            'columns' => $editable_columns,
+            'fields' => $editable_field_names,
+            'types' => $editable_data_types,
+            'names' => $editable_display_names,
+            'required' => $editable_required
         ]
     ];
 }
 
-function get_edittable_columns($table_name, $all_databases) {
-    $edittable_columns = [];
+function get_editable_columns($table_name, $all_databases) {
+    $editable_columns = [];
     $columns = $all_databases->get_columns($table_name);
     foreach($columns as $column) {
         if ($column['Extra'] == null) {
-            $edittable_columns[] = $column['Field'];
+            $editable_columns[] = $column['Field'];
         }
     }
-    return $edittable_columns;
+    return $editable_columns;
 }
 
 function get_display_data($data, $table_name, $all_databases) {
