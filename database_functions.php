@@ -116,6 +116,12 @@ class AllDatabases
         return $data;
     }
 
+    public function get_customer_address_id_address() {
+        $query = 'SELECT id, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode) AS replacement FROM customer_address';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
+
     public function get_warehouse_name_from_id($warehouse_id) {
         $query = 'SELECT name FROM warehouse WHERE id = ?';
         $params = [

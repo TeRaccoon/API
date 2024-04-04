@@ -165,6 +165,10 @@ function run_query() {
             $results = $all_databases->get_warehouse_id_names();
             break;
 
+        case 'customer_address_id_full':
+            $results = $all_databases->get_customer_address_id_address();
+            break;
+
         case "retail_item_id_name":
             $results = $all_databases->get_retail_item_id_names();
             break;
