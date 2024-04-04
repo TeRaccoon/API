@@ -89,6 +89,12 @@ class AllDatabases
         return $results;
     }
 
+    public function get_customer_address() {
+        $query = 'SELECT id, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode) AS address FROM customer_address';
+        $addresses = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $this->format_data('address', $addresses);
+    }
+
     public function get_offer_id_name() {
         $query = 'SELECT id, name AS replacement FROM offers ORDER BY replacement ASC';
         $results = $this->db_utility->execute_query($query, null, 'assoc-array');

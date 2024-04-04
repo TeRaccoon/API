@@ -404,6 +404,10 @@ function get_display_data($data, $table_name, $all_databases) {
                     $assoc_table_data = $all_databases->get_customers_name();
                     break;
 
+                case "customer_address":
+                    $assoc_table_data = $all_databases->get_customer_address();
+                    break;
+
                 case "invoices":
                     $assoc_table_data = $all_databases->get_invoice_titles();
                     break;
@@ -423,18 +427,6 @@ function get_display_data($data, $table_name, $all_databases) {
                 case "warehouse":
                     $assoc_table_data = $all_databases->get_warehouse_names();
                     break;
-                
-                // case "retail_items":
-                //     $alt_query = $conn->query("SELECT ri.id, i.item_name FROM `items` AS i INNER JOIN `retail_items` AS ri ON ri.item_id = i.id");
-                //     break;
-                
-                // case "offers":
-                //     $alt_query = $conn->query("SELECT `id`, `name` FROM `offers`");
-                //     break;
-                
-                // case "page_sections":
-                //     $alt_query = $conn->query("SELECT `id`, `name` FROM `page_sections`");
-                //     break;
             }
             if (!array_key_exists(0, $display_data)) {
                 $display_data = [$display_data];
