@@ -1022,10 +1022,10 @@ class InvoiceDatabase
     public function get_invoiced_items_from_id($invoice_id) {
         $query = 'SELECT 
             ii.id AS id,
-            ii.quantity AS quantity, 
             it.item_name AS name,
-            settings.vat_charge AS vat,
             it.image_file_name AS image_file_name,
+            ii.quantity AS quantity, 
+            settings.vat_charge AS vat,
             ii.discount AS discount
         FROM 
             invoiced_items AS ii 
