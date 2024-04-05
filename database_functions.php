@@ -117,7 +117,7 @@ class AllDatabases
     }
 
     public function get_customer_address_id_address() {
-        $query = 'SELECT id, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode) AS replacement FROM customer_address';
+        $query = 'SELECT id, CONCAT_WS(": ", customers.account_name, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode)) AS replacement FROM customer_address AS ca INNER JOIN customers ON ca.customer_id = customers.id';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
@@ -340,6 +340,7 @@ class CustomerDatabase
 
     function get_address_from_customer_id($customer_id) {
         $query = 'SELECT 
+            id,
             invoice_address_one, 
             invoice_address_two, 
             invoice_address_three,
