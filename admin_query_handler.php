@@ -43,7 +43,8 @@ function run_query() {
         case "total-invoices-per-month":
             $monthStart = urldecode($_GET['monthStart']);
             $monthEnd = urldecode($_GET['monthEnd']);
-            $results = $invoice_database->get_total_invoices_per_month($monthStart, $monthEnd);
+            $year = urldecode($_GET['year']);
+            $results = $invoice_database->get_total_invoices_per_month($monthStart, $monthEnd, $year);
             break;
 
         case "total-invoices-per-day":
@@ -54,10 +55,26 @@ function run_query() {
             $results = $invoice_database->get_total_invoices_per_day($dayStart, $dayEnd, $month, $year);
             break;
 
+        case "total-invoice-value-per-month":
+            $monthStart = urldecode($_GET['monthStart']);
+            $monthEnd = urldecode($_GET['monthEnd']);
+            $year = urldecode($_GET['year']);
+            $results = $invoice_database->get_total_invoice_value_per_month($monthStart, $monthEnd, $year);
+            break;
+
+        case "total-invoice-value-per-day":
+            $dayStart = urldecode($_GET['dayStart']);
+            $dayEnd = urldecode($_GET['dayEnd']);
+            $month = urldecode($_GET['month']);
+            $year = urldecode($_GET['year']);
+            $results = $invoice_database->get_total_invoice_value_per_day($dayStart, $dayEnd, $month, $year);
+            break;
+
         case "average-invoice-value-per-month":
             $monthStart = urldecode($_GET['monthStart']);
             $monthEnd = urldecode($_GET['monthEnd']);
-            $results = $invoice_database->get_average_invoice_value_per_month($monthStart, $monthEnd);
+            $year = urldecode($_GET['year']);
+            $results = $invoice_database->get_average_invoice_value_per_month($monthStart, $monthEnd, $year);
             break;
 
         case "average-invoice-value-per-day":
@@ -71,7 +88,8 @@ function run_query() {
         case "top-selling-item-per-month":
             $monthStart = urldecode($_GET['monthStart']);
             $monthEnd = urldecode($_GET['monthEnd']);
-            $results = $invoice_database->get_top_selling_item_per_month($monthStart, $monthEnd);
+            $year = urldecode($_GET['year']);
+            $results = $invoice_database->get_top_selling_item_per_month($monthStart, $monthEnd, $year);
             break;
 
         case "top-selling-item-per-day":
