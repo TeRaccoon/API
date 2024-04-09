@@ -1210,6 +1210,66 @@ class InvoiceDatabase
         return $invoice_count;
     }
 
+    public function get_total_invoices_per_month($monthStart, $monthEnd) {
+        $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
+        $params = [
+            ['type' => 'i', 'value' => $monthStart],
+            ['type' => 'i', 'value' => $monthEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_total_invoices_per_day($dayStart, $dayEnd, $month, $year) {
+        $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
+        $params = [
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $dayStart],
+            ['type' => 'i', 'value' => $dayEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_average_invoice_value_per_month($monthStart, $monthEnd) {
+        $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, SUM(total) / COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
+        $params = [
+            ['type' => 'i', 'value' => $monthStart],
+            ['type' => 'i', 'value' => $monthEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_average_invoice_value_per_day($dayStart, $dayEnd, $month, $year) {
+        $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, SUM(total) / COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
+        $params = [
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $dayStart],
+            ['type' => 'i', 'value' => $dayEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_top_selling_item_per_month($monthStart, $monthEnd) {
+        $query = 'SELECT total_sold AS total FROM items WHERE EXTRACT(MONTH FROM added_at) BETWEEN ? AND ? ORDER BY total_sold DESC LIMIT 5';
+        $params = [
+            ['type' => 'i', 'value' => $monthStart],
+            ['type' => 'i', 'value' => $monthEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_top_selling_item_per_day($dayStart, $dayEnd, $month, $year) {
+        $query = 'SELECT total_sold AS total FROM items WHERE EXTRACT(MONTH FROM added_at) = ? AND EXTRACT(YEAR FROM added_at) = ? AND DAY(added_at) BETWEEN ? AND ? ORDER BY total_sold DESC LIMIT 5';
+        $params = [
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $dayStart],
+            ['type' => 'i', 'value' => $dayEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
     public function get_invoices_due_today()
     {
         $query = 'SELECT COUNT(*) AS count FROM invoices WHERE delivery_date = CURDATE()';
