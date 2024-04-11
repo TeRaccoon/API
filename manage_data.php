@@ -53,6 +53,10 @@ if (isset($data['action'])) {
             login($user_database, $data);
             break;
 
+        case 'customer-login':
+            customer_login($customer_database, $data);
+            break;
+
         case 'logout':
             $response = logout();
             break;
@@ -318,6 +322,21 @@ function login($user_database, $data)
         $_SESSION['user'] = 'authenticated';
         $_SESSION['username'] = $username;
         $response = array('success' => true, 'message' => 'Login successful', 'data' => $access_level);
+    } else {
+        $response = array('success' => false, 'message' => 'Invalid credentials');
+    }
+
+    echo json_encode($response);
+    exit();
+}
+
+function customer_login($customer_database, $data) {
+    $email = $data['email'];
+    $password = $data['password'];
+
+    $password_hash = $customer_database->get_password_from_email($email);
+    if ($password_hash != null && password_verify($password, $password_hash)) {
+        $response = array('success' => true, 'message' => 'Login successful');
     } else {
         $response = array('success' => false, 'message' => 'Invalid credentials');
     }

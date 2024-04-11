@@ -9,10 +9,6 @@ if (isset($_GET["query"])) {
     run_query();
 }
 
-if (isset($data["query"])) {
-    run_query_post($data);
-}
-
 function collect_data() {
     require_once 'dbh.php';
     $filter = $_GET["filter"];
@@ -20,32 +16,6 @@ function collect_data() {
     echo json_encode($results -> fetch_all(MYSQLI_ASSOC));
 }
 
-function run_query_post($data) {
-    require_once 'dbh.php';
-    require_once 'database_utility.php';
-    require_once 'database_functions.php';
-
-    $query = $data['query'];
-
-    $conn = new DatabaseConnection();
-    $database_utility = new DatabaseUtility($conn);
-    $retail_items_database = new RetailItemsDatabase($database_utility);
-    $image_locations_database = new ImageLocationsDatabase($database_utility);
-    $page_sections_database = new PageSectionsDatabase($database_utility);
-    $retail_user_database = new RetailUserDatabase($database_utility);
-    $customer_database = new CustomerDatabase($database_utility);
-
-    $conn->connect();
-    $results = null;
-    switch ($query) {
-        case 'login':
-            $email = $data['userData']['email'];
-            $password = $data['userData']['password'];
-            $results = login($retail_user_database, $customer_database, $email, $password);
-            break;
-    }
-    echo json_encode($results);
-}
 function run_query() {    
     require_once 'dbh.php';
     require_once 'database_utility.php';

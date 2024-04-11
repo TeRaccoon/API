@@ -318,9 +318,9 @@ class CustomerDatabase
         $this->db_utility = $db_utility;
     }
 
-    function get_customer_password($id)
+    function get_password_from_email($id)
     {
-        $query = 'SELECT password FROM customers WHERE id = ?';
+        $query = 'SELECT password FROM customers WHERE email = ?';
         $params = [
             ['type' => 's', 'value' => $id]
         ];
@@ -863,24 +863,6 @@ class RetailItemsDatabase
         ];
         $product = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $product;
-    }
-}
-
-class RetailUserDatabase
-{
-    private $db_utility;
-    public function __construct($db_utility)
-    {
-        $this->db_utility = $db_utility;
-    }
-    public function get_password($email)
-    {
-        $query = 'SELECT password FROM customers WHERE email = ?';
-        $params = [
-            ['type' => 's', 'value' => $email]
-        ];
-        $passwordHash = $this->db_utility->execute_query($query, $params, 'assoc-array')['password'];
-        return $passwordHash;
     }
 }
 
