@@ -328,14 +328,23 @@ class CustomerDatabase
         return $password_hash;
     }
 
-    function get_customer_details($id)
+    function get_customer_details_from_email($email)
     {
-        $query = 'SELECT forename, surname, email, phone_number_primary, phone_number_secondary FROM customers WHERE id = ?';
+        $query = 'SELECT forename, surname, email, phone_number_primary, phone_number_secondary FROM customers WHERE email = ?';
         $params = [
-            ['type' => 's', 'value' => $id]
+            ['type' => 's', 'value' => $email]
         ];
         $details = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $details;
+    }
+
+    function get_customer_wishlist_from_email($email) 
+    {
+        $query = 'SELECT i.item_name FROM items AS i INNER JOIN retail_items AS ri ON i.id = ri.item_id INNER JOIN wishlist AS w ON ri.id = w.retail_item_id INNER JOIN customers AS c ON w.customer_id = c.id WHERE c.email = ?';
+        $params = [
+            ['type' => 's', 'value' => $email]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
     function get_address_from_customer_id($customer_id) {
@@ -853,6 +862,15 @@ class RetailItemsDatabase
         ];
         $product_images = $this->db_utility->execute_query($query, $params, 'array');
         return $product_images;
+    }
+
+    public function get_is_product_in_wishlist($email, $product_id) {
+        $query = 'SELECT COUNT(w.id) FROM wishlist AS w INNER JOIN customers AS c ON w.customer_id = c.id WHERE c.email = ? AND w.retail_item_id = ?';
+        $params = [
+            ['type' => 's', 'value' => $email],
+            ['type' => 'i', 'value' => $product_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
     public function get_product_from_name($product_name)

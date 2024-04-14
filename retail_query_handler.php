@@ -103,14 +103,30 @@ function run_query() {
             $results = $retail_items_database->get_product_view_images($retail_item_id);
             break;
 
+        case "is-product-in-wishlist":
+            $email = urldecode($_GET['email']);
+            $product_id = urldecode($_GET['product_id']);
+            $results = $retail_items_database->get_is_product_in_wishlist($email, $product_id);
+            break;
+
         case "product-view-details":
             $product_name = urldecode($_GET['filter']);
             $results = $retail_items_database->get_product_from_name($product_name);
             break;
 
-        case "user-details":
-            $user_id = urldecode($_GET['filter']);
-            $results = $customer_database->get_customer_details($user_id);
+        case "user-id-from-email":
+            $email = urldecode($_GET['filter']);
+            $results = $customer_database->get_customer_id_from_email($email);
+            break;
+
+        case "user-details-from-email":
+            $email = urldecode($_GET['filter']);
+            $results = $customer_database->get_customer_details_from_email($email);
+            break;
+
+        case "wishlist-from-email":
+            $email = urldecode($_GET['filter']);
+            $results = $customer_database->get_customer_wishlist_from_email($email);
             break;
     }
     echo json_encode($results);
