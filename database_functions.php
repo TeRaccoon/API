@@ -376,7 +376,7 @@ class CustomerDatabase
         $params = [
             ['type' => 's', 'value' => $email]
         ];
-        $id = $this->db_utility->execute_query($query, $params,  'assoc-array')['id'];
+        $id = $this->db_utility->execute_query($query, $params,  'array');
         return $id;
     }
 
@@ -726,7 +726,7 @@ class RetailItemsDatabase
 
     public function get_items_from_category($category)
     {
-        $query = 'SELECT ri.*, i.item_name AS item_name, i.retail_price AS price, i.stock_code AS stock_code FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE category = ?';
+        $query = 'SELECT i.item_name AS item_name, i.retail_price AS price, i.stock_code AS stock_code FROM items AS i WHERE category = ?';
         $params = [
             ['type' => 's', 'value' => $category]
         ];
@@ -807,7 +807,7 @@ class RetailItemsDatabase
 
     public function get_featured($limit)
     {
-        $query = "SELECT ri.id AS id, i.item_name AS item_name, i.stock_code AS stock_code, i.image_file_name, ri.discount, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE featured = 'Yes' AND visible = 'Yes' LIMIT 0, ?";
+        $query = "SELECT id, item_name AS item_name, stock_code, image_file_name, discount, retail_price AS price FROM items WHERE featured = 'Yes' AND visible = 'Yes' LIMIT 0, ?";
         $params = [
             ['type' => 'i', 'value' => $limit]
         ];
@@ -817,7 +817,7 @@ class RetailItemsDatabase
 
     public function get_products_from_category($category)
     {
-        $query = 'SELECT ri.id AS id, i.image_file_name AS image_location, i.brand, ri.discount, i.item_name AS name, i.retail_price AS price FROM items AS i LEFT JOIN retail_items AS ri ON ri.item_id = i.id WHERE i.category = ? OR i.sub_category = ?';
+        $query = 'SELECT id, image_file_name AS image_location, brand, discount, item_name AS name, retail_price AS price FROM items WHERE category = ? OR sub_category = ?';
         $params = [
             ['type' => 's', 'value' => $category],
             ['type' => 's', 'value' => $category]

@@ -85,17 +85,15 @@ class DatabaseUtility {
     }
     public function construct_insert_query($table_name, $field_names, $submitted_data, $data) {
         $nonEmptyFields = array_filter($field_names, function($field) use ($data) {
-            return $data[$field] !== '';
+            return isset($data[$field]) && $data[$field] !== ''; // Check for empty string
         });
         $fields_string = implode(', ', $nonEmptyFields);
         
-        $nonEmptyValues = array_filter($submitted_data, function($data) {
-            return $data !== '';
-        });
-
-        $values_string = implode(', ', array_map(function($data) {
-            return "'$data'";
-        }, $nonEmptyValues));
+        $nonEmptyValues = array_map(function($field) use ($submitted_data) {
+            return isset($submitted_data[$field]) ? "'" . $submitted_data[$field] . "'" : 'NULL';
+        }, $nonEmptyFields);
+    
+        $values_string = implode(', ', $nonEmptyValues);
         
         $query = "INSERT INTO $table_name ($fields_string) VALUES ($values_string)";
         return $query;

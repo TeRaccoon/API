@@ -140,4 +140,3 @@ function login($retail_user_database, $customer_database, $email, $password) {
         return $customer_database->get_customer_id_from_email($email);
     }
 }
-?>

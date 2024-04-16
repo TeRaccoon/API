@@ -395,9 +395,16 @@ function construct_submitted_data($db_utility, $field_names, $table_name, $data)
     foreach ($field_names as $field_name) {
         $type = $db_utility->get_type_from_field($table_name, $field_name);
         if ($type == 'date') {
-            $date = check_date($data[$field_name]);
-            if ($date != null) {
-                $submitted_data[$field_name] = $date;
+            if (array_key_exists($field_name, $data)) {
+                $date = check_date($data[$field_name]);
+                if ($date != null) {
+                    $submitted_data[$field_name] = $date;
+                } else {
+                    $submitted_data[$field_name] = NULL;
+                }
+            }
+            else {
+                $submitted_data[$field_name] = NULL;
             }
         } else {
             if ($field_name == "image_file_name" && array_key_exists('image_file_name', $_FILES)) {
@@ -409,7 +416,11 @@ function construct_submitted_data($db_utility, $field_names, $table_name, $data)
                     echo  $_FILES[$field_name]['name'];
                 }
             }
-            $submitted_data[$field_name] = $data[$field_name];
+            if (array_key_exists($field_name, $data)) {
+                $submitted_data[$field_name] = $data[$field_name];
+            } else {
+                $submitted_data[$field_name] = NULL;
+            }
         }
     }
     return $submitted_data;
