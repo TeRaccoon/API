@@ -318,6 +318,11 @@ function run_query() {
             $warehouse_id = urldecode($_GET['warehouse_id']);
             $results = get_warehouse_customer_coordinates($all_databases, $customer_id, $warehouse_id);
             break;
+
+        case 'delete-image':
+            $image_file_name = urldecode($_GET['filter']);
+            $results = $all_databases->delete_image_by_file_name($image_file_name);
+            break;
     }
     echo json_encode($results);
 }

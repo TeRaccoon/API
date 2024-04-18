@@ -157,6 +157,27 @@ class AllDatabases
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
+    public function delete_image_by_file_name($image_file_name) {
+        $query = 'DELETE FROM retail_item_images WHERE image_file_name = ?';
+        $params = [
+            ['type' => 's', 'value' => $image_file_name]
+        ];
+
+        $file = '../uploads/' . basename($image_file_name);
+
+        if (file_exists($file) && is_writable($file)) {
+            if (unlink($file)) {
+                $response = array('success' => false, 'message' => 'The file could not be deleted!');
+            } else {
+                $response = array('success' => false, 'message' => 'The file could not be deleted!');
+            }
+        } else {
+            $response = array('success' => false, 'message' => 'File does not exist or is not writable!');
+        }
+
+        $this->db_utility->execute_query($query, $params, false);
+        return $response;
+    }
     function get_tables()
     {
         $query = 'SHOW TABLES';
@@ -817,7 +838,7 @@ class RetailItemsDatabase
 
     public function get_products_from_category($category)
     {
-        $query = 'SELECT id, image_file_name AS image_location, brand, discount, item_name AS name, retail_price AS price FROM items WHERE category = ? OR sub_category = ?';
+        $query = 'SELECT id, image_file_name AS image_location, brand, discount, item_name AS name, retail_price AS price FROM items WHERE visible = "Yes" AND category = ? OR sub_category = ?';
         $params = [
             ['type' => 's', 'value' => $category],
             ['type' => 's', 'value' => $category]
@@ -828,7 +849,7 @@ class RetailItemsDatabase
 
     public function get_products()
     {
-        $query = 'SELECT i.image_file_name AS image_location, i.brand, ri.discount, i.category, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id';
+        $query = 'SELECT id, image_file_name AS image_location, brand, discount, item_name AS name, retail_price AS price FROM items WHERE visible = "Yes"';
         $product_names = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $product_names;
     }
