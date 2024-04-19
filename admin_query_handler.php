@@ -474,6 +474,10 @@ function get_display_data($data, $table_name, $all_databases) {
                 case "invoices":
                     $assoc_table_data = $all_databases->get_invoice_titles();
                     break;
+
+                case "suppliers":
+                    $assoc_table_data = $all_databases->get_suppliers_name();
+                    break;
                 
                 case "items":
                     $assoc_table_data = $all_databases->get_item_names();

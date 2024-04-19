@@ -248,6 +248,12 @@ class AllDatabases
         return $this->format_data("full_name", $names);
     }
 
+    function get_suppliers_name() {
+        $query = 'SELECT id, account_name FROM suppliers';
+        $names = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $this->format_data("account_name", $names);
+    }
+
     function get_page_section_names() {
         $query = 'SELECT id, name FROM page_sections';
         $names = $this->db_utility->execute_query($query, null, 'assoc-array');
@@ -380,6 +386,7 @@ class CustomerDatabase
     function get_customer_wishlist_from_id($id) 
     {
         $query = 'SELECT 
+        w.id AS id,
         i.item_name AS name, 
         i.retail_price AS price,
         i.discount AS discount,
@@ -401,6 +408,7 @@ class CustomerDatabase
         WHERE 
             c.id = ?
         GROUP BY 
+            w.id,
             i.item_name, 
             i.retail_price';
         $params = [
