@@ -134,6 +134,12 @@ class AllDatabases
         return $data;
     }
 
+    public function get_supplier_invoice_id_reference() {
+        $query = 'SELECT id, reference AS replacement FROM supplier_invoices';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
+
     public function get_customer_address_id_address() {
         $query = 'SELECT ca.id, CONCAT_WS(": ", customers.account_name, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode)) AS replacement FROM customer_address AS ca INNER JOIN customers ON ca.customer_id = customers.id';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
@@ -573,6 +579,41 @@ class ItemDatabase
 
         $params = [
             ['type' => 'i', 'value' => $item_id]
+        ];
+
+        $stock_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $stock_data;
+    }
+
+    function get_stock_from_invoice_id($invoice_id) {
+        $query = 'SELECT
+        si.id,
+        items.item_name,
+        items.image_file_name,
+        si.quantity,
+        si.expiry_date,
+        si.packing_format,
+        si.barcode,
+        wh.name AS warehouse_name
+      FROM 
+        stocked_items AS si
+      INNER JOIN
+        items
+      ON
+        items.id = si.item_id
+      INNER JOIN
+        warehouse AS wh
+      ON
+        si.warehouse_id = wh.id
+      INNER JOIN
+        supplier_invoices AS sui
+      ON
+        si.supplier_invoice_id = sui.id
+      WHERE
+        si.supplier_invoice_id = ?';
+
+        $params = [
+            ['type' => 'i', 'value' => $invoice_id]
         ];
 
         $stock_data = $this->db_utility->execute_query($query, $params, 'assoc-array');

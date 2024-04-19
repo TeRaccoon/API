@@ -224,6 +224,10 @@ function run_query() {
             $results = $all_databases->get_warehouse_id_names();
             break;
 
+        case "supplier_invoice_id_reference":
+            $results = $all_databases->get_supplier_invoice_id_reference();
+            break;
+
         case 'customer_address_id_full':
             $results = $all_databases->get_customer_address_id_address();
             break;
@@ -267,6 +271,11 @@ function run_query() {
         case "invoiced-items":
             $invoice_id = urldecode($_GET['filter']);
             $results = $invoice_database->get_invoiced_items_from_id($invoice_id);
+            break;
+
+        case "stocked-items-invoice":
+            $invoice_id = urldecode($_GET['filter']);
+            $results = $items_database->get_stock_from_invoice_id($invoice_id);
             break;
 
         case "invoiced-items-basic-ids":
