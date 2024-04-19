@@ -65,6 +65,10 @@ if (isset($data['action'])) {
             $response = check_login($user_database);
             break;
 
+        case 'check-login-customer':
+            $response = check_login_customer();
+            break;
+
         case 'change-password':
             $response = change_password($user_database, $data, $database);
             break;
@@ -305,6 +309,16 @@ function check_login($user_database) {
     return $response;
 }
 
+function check_login_customer() {
+    if (isset($_SESSION['customer']) && $_SESSION['customer']) {
+        $response = array('success' => true, 'message' => 'User logged in', 'data' => $_SESSION['id']);
+    } else {
+        $response = array('success' => false, 'message' => 'No previous logins');
+    }
+
+    return $response;
+}
+
 function logout() {
     session_destroy();
     return array('success' => true, 'message' => 'Logout successful');
@@ -336,7 +350,11 @@ function customer_login($customer_database, $data) {
 
     $password_hash = $customer_database->get_password_from_email($email);
     if ($password_hash != null && password_verify($password, $password_hash)) {
-        $response = array('success' => true, 'message' => 'Login successful');
+        $userID = $customer_database->get_customer_id_from_email($email);
+        $_SESSION['customer'] = 'authenticated';
+        $_SESSION['id'] = $userID;
+
+        $response = array('success' => true, 'message' => 'Login successful', 'data' => $userID);
     } else {
         $response = array('success' => false, 'message' => 'Invalid credentials');
     }

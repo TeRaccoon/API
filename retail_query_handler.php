@@ -25,6 +25,7 @@ function run_query() {
 
     $conn = new DatabaseConnection();
     $database_utility = new DatabaseUtility($conn);
+    $all_databases = new AllDatabases($database_utility);
     $retail_items_database = new RetailItemsDatabase($database_utility);
     $image_locations_database = new ImageLocationsDatabase($database_utility);
     $page_sections_database = new PageSectionsDatabase($database_utility);
@@ -104,9 +105,9 @@ function run_query() {
             break;
 
         case "is-product-in-wishlist":
-            $email = urldecode($_GET['email']);
+            $id = urldecode($_GET['id']);
             $product_id = urldecode($_GET['product_id']);
-            $results = $retail_items_database->get_is_product_in_wishlist($email, $product_id);
+            $results = $retail_items_database->get_is_product_in_wishlist($id, $product_id);
             break;
 
         case "product-view-details":
@@ -119,14 +120,19 @@ function run_query() {
             $results = $customer_database->get_customer_id_from_email($email);
             break;
 
-        case "user-details-from-email":
-            $email = urldecode($_GET['filter']);
-            $results = $customer_database->get_customer_details_from_email($email);
+        case "user-details-from-id":
+            $id = urldecode($_GET['filter']);
+            $results = $customer_database->get_customer_details_from_id($id);
             break;
 
-        case "wishlist-from-email":
-            $email = urldecode($_GET['filter']);
-            $results = $customer_database->get_customer_wishlist_from_email($email);
+        case "wishlist-from-id":
+            $id = urldecode($_GET['filter']);
+            $results = $customer_database->get_customer_wishlist_from_id($id);
+            break;
+
+        case "total-stock-by-id":
+            $item_id = urldecode($_GET['filter']);
+            $results = $all_databases->get_total_stock_by_id($item_id);
             break;
     }
     echo json_encode($results);

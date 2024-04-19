@@ -89,6 +89,24 @@ class AllDatabases
         return $results;
     }
 
+    public function get_total_stock_by_id($item_id) {
+        $query = 'SELECT 
+        SUM(
+            CASE 
+                WHEN si.packing_format = "Individual" THEN si.quantity
+                WHEN si.packing_format = "Box" THEN si.quantity * i.box_size
+                WHEN si.packing_format = "Pallet" THEN si.quantity * i.pallet_size
+            END
+        ) AS total_quantity 
+        FROM 
+            stocked_items si
+        JOIN 
+            items i ON si.item_id = ?';
+
+        $results = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $results;
+    }
+
     public function get_customer_address() {
         $query = 'SELECT id, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode) AS address FROM customer_address';
         $addresses = $this->db_utility->execute_query($query, null, 'assoc-array');
@@ -349,21 +367,44 @@ class CustomerDatabase
         return $password_hash;
     }
 
-    function get_customer_details_from_email($email)
+    function get_customer_details_from_id($id)
     {
-        $query = 'SELECT forename, surname, email, phone_number_primary, phone_number_secondary FROM customers WHERE email = ?';
+        $query = 'SELECT forename, surname, email, phone_number_primary, phone_number_secondary FROM customers WHERE id = ?';
         $params = [
-            ['type' => 's', 'value' => $email]
+            ['type' => 's', 'value' => $id]
         ];
         $details = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $details;
     }
 
-    function get_customer_wishlist_from_email($email) 
+    function get_customer_wishlist_from_id($id) 
     {
-        $query = 'SELECT i.item_name FROM items AS i INNER JOIN retail_items AS ri ON i.id = ri.item_id INNER JOIN wishlist AS w ON ri.id = w.retail_item_id INNER JOIN customers AS c ON w.customer_id = c.id WHERE c.email = ?';
+        $query = 'SELECT 
+        i.item_name AS name, 
+        i.retail_price AS price,
+        i.discount AS discount,
+        SUM(
+            CASE 
+                WHEN si.packing_format = "Individual" THEN si.quantity
+                WHEN si.packing_format = "Box" THEN si.quantity * i.box_size
+                WHEN si.packing_format = "Pallet" THEN si.quantity * i.pallet_size
+            END
+        ) AS total_quantity 
+        FROM 
+            items AS i 
+        INNER JOIN 
+            wishlist AS w ON i.id = w.item_id 
+        INNER JOIN 
+            customers AS c ON w.customer_id = c.id
+        LEFT JOIN 
+            stocked_items AS si ON i.id = si.item_id
+        WHERE 
+            c.id = ?
+        GROUP BY 
+            i.item_name, 
+            i.retail_price';
         $params = [
-            ['type' => 's', 'value' => $email]
+            ['type' => 'i', 'value' => $id]
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
@@ -397,7 +438,7 @@ class CustomerDatabase
         $params = [
             ['type' => 's', 'value' => $email]
         ];
-        $id = $this->db_utility->execute_query($query, $params,  'array');
+        $id = $this->db_utility->execute_query($query, $params,  'assoc-array')['id'];
         return $id;
     }
 
@@ -786,14 +827,6 @@ class RetailItemsDatabase
         $query = 'SELECT DISTINCT brand FROM items WHERE brand IS NOT NULL';
         return $this->db_utility->execute_query($query, null, 'array');
     }
-    
-    public function reverse_item_id($item_id) {
-        $query = 'SELECT id FROM retail_items WHERE item_id = ?';
-        $params = [
-            ['type' => 'i', 'value' => $item_id]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array')['id'];
-    }
     public function get_visible_categories() {
         $query = 'SELECT name, image_file_name AS location FROM categories WHERE visible = "Yes"';
         $categories = $this->db_utility->execute_query($query, null, 'assoc-array');
@@ -809,7 +842,7 @@ class RetailItemsDatabase
 
     public function get_product_from_id($id)
     {
-        $query = 'SELECT i.retail_price, ri.discount, i.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id WHERE ri.id = ?';
+        $query = 'SELECT item_name AS name, retail_price, discount, image_file_name AS image_location FROM items WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $id]
         ];
@@ -818,7 +851,7 @@ class RetailItemsDatabase
     }
     public function get_top_products($limit)
     {
-        $query = 'SELECT ri.id, i.item_name AS item_name, i.retail_price AS price, off.offer_start, off.offer_end, ri.discount, i.image_file_name AS image_location FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id INNER JOIN offers AS off ON ri.offer_id = off.id ORDER BY i.total_sold DESC LIMIT 0, ?';
+        $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id ORDER BY i.total_sold DESC LIMIT 0, ?';
         $params = [
             ['type' => 'i', 'value' => $limit]
         ];
@@ -885,10 +918,10 @@ class RetailItemsDatabase
         return $product_images;
     }
 
-    public function get_is_product_in_wishlist($email, $product_id) {
-        $query = 'SELECT COUNT(w.id) FROM wishlist AS w INNER JOIN customers AS c ON w.customer_id = c.id WHERE c.email = ? AND w.retail_item_id = ?';
+    public function get_is_product_in_wishlist($id, $product_id) {
+        $query = 'SELECT COUNT(w.id) FROM wishlist AS w INNER JOIN customers AS c ON w.customer_id = c.id WHERE c.id = ? AND w.retail_item_id = ?';
         $params = [
-            ['type' => 's', 'value' => $email],
+            ['type' => 's', 'value' => $id],
             ['type' => 'i', 'value' => $product_id]
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
@@ -896,7 +929,7 @@ class RetailItemsDatabase
 
     public function get_product_from_name($product_name)
     {
-        $query = 'SELECT ri.id, i.category, i.sub_category, ri.description, i.brand, ri.discount, ri.item_id, i.item_name AS name, i.retail_price AS price FROM retail_items AS ri INNER JOIN items as i ON ri.item_id = i.id WHERE i.item_name = ?';
+        $query = 'SELECT id, category, sub_category, description, brand, discount, item_name AS name, retail_price AS price FROM items WHERE item_name = ?';
         $params = [
             ['type' => 's', 'value' => $product_name]
         ];

@@ -283,11 +283,6 @@ function run_query() {
             $item_id = urldecode($_GET['filter']);
             $results = $all_databases->get_images_count_from_item_id($item_id);
             break;
-
-        case "reverse-item-id":
-            $item_id = urldecode($_GET['filter']);
-            $results = $retail_items_database->reverse_item_id($item_id);
-            break;
         
         case "append-or-add":
             $table = urldecode($_GET['table']);
