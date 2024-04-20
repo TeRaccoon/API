@@ -9,13 +9,6 @@ if (isset($_GET["query"])) {
     run_query();
 }
 
-function collect_data() {
-    require_once 'dbh.php';
-    $filter = $_GET["filter"];
-    $results = $conn -> query("SELECT * FROM retail_items WHERE ".$filter);
-    echo json_encode($results -> fetch_all(MYSQLI_ASSOC));
-}
-
 function run_query() {    
     require_once 'dbh.php';
     require_once 'database_utility.php';

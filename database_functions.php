@@ -938,7 +938,7 @@ class RetailItemsDatabase
 
     public function get_product_view($product_name)
     {
-        $query = 'SELECT i.image_file_name AS primary_image, ri.id, ri.discount FROM retail_items as ri INNER JOIN items AS i ON ri.item_id = i.id  WHERE i.item_name = ?';
+        $query = 'SELECT image_file_name AS primary_image, id, discount FROM items WHERE item_name = ?';
         $params = [
             ['type' => 's', 'value' => $product_name]
         ];
@@ -948,17 +948,7 @@ class RetailItemsDatabase
 
     public function get_product_view_images($retail_item_id)
     {
-        $query = 'SELECT i.image_file_name AS image 
-        FROM items AS i 
-        INNER JOIN retail_items AS ri ON ri.item_id = i.id 
-        WHERE ri.id = ? 
-        UNION 
-        SELECT rii.image_file_name
-        FROM retail_item_images AS rii 
-        INNER JOIN retail_items AS ri ON ri.id = ? 
-        INNER JOIN items AS i ON i.id = ri.item_id 
-        WHERE rii.item_id = i.id;
-        ';
+        $query = 'SELECT image_file_name FROM items WHERE id = ? UNION SELECT rii.image_file_name FROM retail_item_images AS rii INNER JOIN items AS i ON rii.item_id = i.id WHERE i.id = ?';
         $params = [
             ['type' => 'i', 'value' => $retail_item_id],
             ['type' => 'i', 'value' => $retail_item_id]
