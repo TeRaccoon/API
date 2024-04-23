@@ -423,6 +423,14 @@ class CustomerDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
+    function get_order_history($user_id) {
+        $query = 'SELECT title, status, net_value, VAT, total, payment_status FROM invoices WHERE customer_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $user_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
     function get_address_from_customer_id($customer_id) {
         $query = 'SELECT 
             id,
@@ -452,8 +460,17 @@ class CustomerDatabase
         $params = [
             ['type' => 's', 'value' => $email]
         ];
-        $id = $this->db_utility->execute_query($query, $params,  'assoc-array')['id'];
+        $id = $this->db_utility->execute_query($query, $params,  'array');
         return $id;
+    }
+
+    function get_customer_type_from_email($email)
+    {
+        $query = 'SELECT id, customer_type FROM customers WHERE email = ?';
+        $params = [
+            ['type' => 's', 'value' => $email]
+        ];
+        return $this->db_utility->execute_query($query, $params,  'assoc-array');
     }
 
     function get_customer_discount($customer_id)
@@ -898,9 +915,16 @@ class RetailItemsDatabase
         $product = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $product;
     }
-    public function get_top_products($limit)
+    public function get_top_products($limit, $customer_type)
     {
-        $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id ORDER BY i.total_sold DESC LIMIT 0, ?';
+        if ($customer_type == 'Retail') 
+        {
+            $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" ORDER BY i.total_sold DESC LIMIT 0, ?';
+        } 
+        else 
+        {
+            $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" ORDER BY i.total_sold DESC LIMIT 0, ?';
+        }
         $params = [
             ['type' => 'i', 'value' => $limit]
         ];
@@ -958,12 +982,12 @@ class RetailItemsDatabase
     }
 
     public function get_is_product_in_wishlist($id, $product_id) {
-        $query = 'SELECT COUNT(w.id) FROM wishlist AS w INNER JOIN customers AS c ON w.customer_id = c.id WHERE c.id = ? AND w.retail_item_id = ?';
+        $query = 'SELECT COUNT(w.id) AS count FROM wishlist AS w INNER JOIN customers AS c ON w.customer_id = c.id WHERE c.id = ? AND w.item_id = ?';
         $params = [
             ['type' => 's', 'value' => $id],
             ['type' => 'i', 'value' => $product_id]
         ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $this->db_utility->execute_query($query, $params, 'assoc-array')['count'];
     }
 
     public function get_product_from_name($product_name)

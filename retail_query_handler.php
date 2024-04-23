@@ -46,8 +46,9 @@ function run_query() {
             break;
 
         case 'top-products':
-            $limit = urldecode($_GET['filter']);
-            $results = $retail_items_database->get_top_products($limit);
+            $limit = urldecode($_GET['limit']);
+            $customer_type = urldecode($_GET['queryType']);
+            $results = $retail_items_database->get_top_products($limit, $customer_type);
             break;
 
         case 'products-from-category':
@@ -126,6 +127,11 @@ function run_query() {
         case "total-stock-by-id":
             $item_id = urldecode($_GET['filter']);
             $results = $all_databases->get_total_stock_by_id($item_id);
+            break;
+
+        case "order-history":
+            $user_id = urldecode($_GET['filter']);
+            $results = $customer_database->get_order_history($user_id);
             break;
     }
     echo json_encode($results);
