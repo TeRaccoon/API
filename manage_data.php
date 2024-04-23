@@ -72,6 +72,10 @@ if (isset($data['action'])) {
         case 'change-password':
             $response = change_password($user_database, $data, $database);
             break;
+
+        default:
+            $response = array('success' => false, 'message' => 'Unknown API endpoint!');
+            break;
     }
     echo json_encode($response);
     $database->close_connection();
@@ -83,6 +87,10 @@ if (isset($data['action'])) {
 
 function insert($conn, $database_utility, $data)
 {
+    if (array_key_exists('password', $data) && $data['password']) {
+        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 10]);
+    }
+
     $table_name = $data['table_name'];
     $field_names = get_field_names($conn, $table_name);
     $submitted_data = construct_submitted_data($database_utility, $field_names, $table_name, $data);
@@ -310,8 +318,8 @@ function check_login($user_database) {
 }
 
 function check_login_customer() {
-    if (isset($_SESSION['customer']) && $_SESSION['customer']) {
-        $response = array('success' => true, 'message' => 'User logged in', 'data' => $_SESSION['id']);
+    if (isset($_SESSION['customer']) && $_SESSION['customer'] && isset($_SESSION['customer_type'])) {
+        $response = array('success' => true, 'message' => 'User logged in', 'data' => array('id' => $_SESSION['id'], 'customer_type' => $_SESSION['customer_type']));
     } else {
         $response = array('success' => false, 'message' => 'No previous logins');
     }
@@ -350,11 +358,12 @@ function customer_login($customer_database, $data) {
 
     $password_hash = $customer_database->get_password_from_email($email);
     if ($password_hash != null && password_verify($password, $password_hash)) {
-        $userID = $customer_database->get_customer_id_from_email($email);
+        $userInfo = $customer_database->get_customer_type_from_email($email);
         $_SESSION['customer'] = 'authenticated';
-        $_SESSION['id'] = $userID;
+        $_SESSION['id'] = $userInfo['id'];
+        $_SESSION['customer_type'] = $userInfo['customer_type'];
 
-        $response = array('success' => true, 'message' => 'Login successful', 'data' => $userID);
+        $response = array('success' => true, 'message' => 'Login successful', 'data' => $userInfo);
     } else {
         $response = array('success' => false, 'message' => 'Invalid credentials');
     }
