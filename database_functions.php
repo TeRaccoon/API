@@ -919,11 +919,11 @@ class RetailItemsDatabase
     {
         if ($customer_type == 'Retail') 
         {
-            $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" ORDER BY i.total_sold DESC LIMIT 0, ?';
+            $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Retail" OR visibility = "Both") ORDER BY i.total_sold DESC LIMIT 0, ?';
         } 
         else 
         {
-            $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" ORDER BY i.total_sold DESC LIMIT 0, ?';
+            $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both") ORDER BY i.total_sold DESC LIMIT 0, ?';
         }
         $params = [
             ['type' => 'i', 'value' => $limit]
@@ -932,9 +932,16 @@ class RetailItemsDatabase
         return $products;
     }
 
-    public function get_featured($limit)
+    public function get_featured($limit, $customer_type)
     {
-        $query = "SELECT id, item_name AS item_name, stock_code, image_file_name, discount, retail_price AS price FROM items WHERE featured = 'Yes' AND visible = 'Yes' LIMIT 0, ?";
+        if ($customer_type == 'Retail') 
+        {
+            $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Retail" OR visibility = "Both") AND i.featured = "Yes" ORDER BY i.total_sold DESC LIMIT 0, ?';
+        } 
+        else 
+        {
+            $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both") AND i.featured = "Yes" ORDER BY i.total_sold DESC LIMIT 0, ?';
+        }
         $params = [
             ['type' => 'i', 'value' => $limit]
         ];
@@ -942,9 +949,16 @@ class RetailItemsDatabase
         return $products;
     }
 
-    public function get_products_from_category($category)
+    public function get_products_from_category($category, $customer_type)
     {
-        $query = 'SELECT id, image_file_name AS image_location, brand, discount, item_name AS name, retail_price AS price FROM items WHERE visible = "Yes" AND category = ? OR sub_category = ?';
+        if ($customer_type == 'Retail') 
+        {
+            $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE visible = "Yes" AND (visibility = "Retail" OR visibility = "Both") AND (category = ? OR sub_category = ?)';
+        }
+        else
+        {
+            $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both") AND (category = ? OR sub_category = ?)';
+        }
         $params = [
             ['type' => 's', 'value' => $category],
             ['type' => 's', 'value' => $category]
@@ -953,9 +967,16 @@ class RetailItemsDatabase
         return $products;
     }
 
-    public function get_products()
+    public function get_products($customer_type)
     {
-        $query = 'SELECT id, image_file_name AS image_location, brand, discount, item_name AS name, retail_price AS price FROM items WHERE visible = "Yes"';
+        if ($customer_type == 'Retail') 
+        {
+            $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE visible = "Yes" AND (visibility = "Retail" OR visibility = "Both")';
+        }
+        else
+        {
+            $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both")';
+        }
         $product_names = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $product_names;
     }
@@ -990,9 +1011,16 @@ class RetailItemsDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array')['count'];
     }
 
-    public function get_product_from_name($product_name)
+    public function get_product_from_name($product_name, $customer_type)
     {
-        $query = 'SELECT id, category, sub_category, description, brand, discount, item_name AS name, retail_price AS price FROM items WHERE item_name = ?';
+        if ($customer_type == 'Retail') 
+        {
+            $query = 'SELECT id, category, sub_category, description, brand, discount, item_name AS name, retail_price AS price FROM items WHERE item_name = ? AND visible = "Yes" AND (visibility = "Retail" OR visibility = "Both")';
+        }
+        else
+        {
+            $query = 'SELECT id, category, sub_category, description, brand, discount, item_name AS name, wholesale_price AS price, box_price AS box_price, pallet_price AS pallet_price, box_size AS box_size, pallet_size AS pallet_size FROM items WHERE item_name = ? AND visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both")';
+        }
         $params = [
             ['type' => 's', 'value' => $product_name]
         ];

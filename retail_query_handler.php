@@ -51,9 +51,22 @@ function run_query() {
             $results = $retail_items_database->get_top_products($limit, $customer_type);
             break;
 
+        case "product-view-details":
+            $product_name = urldecode($_GET['productName']);
+            $customer_type = urldecode($_GET['queryType']);
+            $results = $retail_items_database->get_product_from_name($product_name, $customer_type);
+            break;
+
+        case "featured":
+            $limit = urldecode($_GET['limit']);
+            $customer_type = urldecode($_GET['queryType']);
+            $results = $retail_items_database->get_featured($limit, $customer_type);
+            break;
+
         case 'products-from-category':
-            $category = urldecode($_GET['filter']);
-            $results = $retail_items_database->get_products_from_category($category);
+            $category = urldecode($_GET['category']);
+            $customer_type = urldecode($_GET['queryType']);
+            $results = $retail_items_database->get_products_from_category($category, $customer_type);
             break;
 
         case 'product-from-id':
@@ -62,7 +75,8 @@ function run_query() {
             break;
 
         case 'products':
-            $results = $retail_items_database->get_products();
+            $customer_type = urldecode($_GET['queryType']);
+            $results = $retail_items_database->get_products($customer_type);
             break;
             
         case 'home-slideshow':
@@ -83,11 +97,6 @@ function run_query() {
             $results = $page_sections_database->get_section_image($section_name);
             break;
 
-        case "featured":
-            $limit = urldecode($_GET['filter']);
-            $results = $retail_items_database->get_featured($limit);
-            break;
-
         case "product-view":
             $product_name = urldecode($_GET['filter']);
             $results = $retail_items_database->get_product_view($product_name);
@@ -102,11 +111,6 @@ function run_query() {
             $id = urldecode($_GET['id']);
             $product_id = urldecode($_GET['product_id']);
             $results = $retail_items_database->get_is_product_in_wishlist($id, $product_id);
-            break;
-
-        case "product-view-details":
-            $product_name = urldecode($_GET['filter']);
-            $results = $retail_items_database->get_product_from_name($product_name);
             break;
 
         case "user-id-from-email":
