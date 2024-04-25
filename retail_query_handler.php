@@ -133,6 +133,11 @@ function run_query() {
             $results = $all_databases->get_total_stock_by_id($item_id);
             break;
 
+        case "stock-by-id":
+            $item_id = urldecode($_GET['filter']);
+            $results = $all_databases->get_stock_by_id($item_id);
+            break;
+
         case "order-history":
             $user_id = urldecode($_GET['filter']);
             $results = $customer_database->get_order_history($user_id);

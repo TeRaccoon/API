@@ -97,13 +97,46 @@ class AllDatabases
                 WHEN si.packing_format = "Box" THEN si.quantity * i.box_size
                 WHEN si.packing_format = "Pallet" THEN si.quantity * i.pallet_size
             END
-        ) AS total_quantity 
+        ) AS total_quantity
         FROM 
             stocked_items si
         JOIN 
-            items i ON si.item_id = ?';
+            items i ON si.item_id = i.id
+        WHERE
+            si.item_id = ?';
 
-        $results = $this->db_utility->execute_query($query, null, 'assoc-array');
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+
+        $results = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        return $results;
+    }
+
+    public function get_stock_by_id($item_id) {
+        $query = 'SELECT 
+        si.packing_format,
+        SUM(
+            CASE 
+                WHEN si.packing_format = "Individual" THEN si.quantity
+                WHEN si.packing_format = "Box" THEN si.quantity * i.box_size
+                WHEN si.packing_format = "Pallet" THEN si.quantity * i.pallet_size
+            END
+        ) AS total_quantity
+        FROM 
+            stocked_items si
+        JOIN 
+            items i ON si.item_id = i.id
+        WHERE
+            si.item_id = ?
+        GROUP BY
+            si.packing_format';
+
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+
+        $results = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $results;
     }
 
