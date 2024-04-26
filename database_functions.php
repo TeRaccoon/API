@@ -402,6 +402,16 @@ class CustomerDatabase
         $this->db_utility = $db_utility;
     }
 
+    function get_customer_password($id)
+    {
+        $query = 'SELECT password FROM customers WHERE id = ?';
+        $params = [
+            ['type' => 's', 'value' => $id]
+        ];
+        $password_hash = $this->db_utility->execute_query($query, $params, 'assoc-array')['password'];
+        return $password_hash;
+    }
+
     function get_password_from_email($id)
     {
         $query = 'SELECT password FROM customers WHERE email = ?';

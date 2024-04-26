@@ -135,9 +135,10 @@ function append_user($user_database, $username, $data)
 function append_customer($customer_database, $customer_id, $data)
 {
     $current_password = $customer_database->get_customer_password($customer_id);
-
-    if ($current_password != $data['password']) {
+    if ($current_password != $data['password'] && $data['password'] != '') {
         $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 10]);
+    } else {
+        $data['password'] = $current_password;
     }
 
     return $data;
