@@ -312,7 +312,7 @@ function run_query() {
             $results = $items_database->sub_categories();
             break;
 
-        case 'addresses_from_customer_id':
+        case 'customer-addresses-by-id':
             $customer_id = urldecode($_GET['filter']);
             $results = $customer_database->get_address_from_customer_id($customer_id);
             break;
