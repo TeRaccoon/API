@@ -1142,12 +1142,6 @@ class InvoiceDatabase
         $this->db_utility = $db_utility;
     }
 
-    public function get_invoices_due_today_ids() {
-        $query = 'SELECT id FROM invoices WHERE delivery_date = CURDATE()';
-        $invoice_ids = $this->db_utility->execute_query($query, null, 'array');
-        return $invoice_ids;
-    }
-
     public function get_invoice_id_titles() {
         $query = 'SELECT id, title AS replacement FROM invoices ORDER BY replacement ASC';
         return $this->db_utility->execute_query($query, null, 'assoc-array');

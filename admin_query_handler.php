@@ -109,10 +109,6 @@ function run_query() {
             $results = $invoice_database->get_invoices_due_today();
             break;
 
-        case "invoices-due-today-ids":
-            $results = $invoice_database->get_invoices_due_today_ids();
-            break;
-
         case "total-customers":
             $results = $customer_database->get_total_customers();
             break;
