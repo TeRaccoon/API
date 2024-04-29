@@ -146,6 +146,12 @@ class AllDatabases
         return $this->format_data('address', $addresses);
     }
 
+    public function get_customer_billing_address() {
+        $query = 'SELECT id, CONCAT_WS(", ", invoice_address_one, invoice_address_two, invoice_address_three, invoice_address_four, delivery_postcode) AS address FROM customer_address';
+        $addresses = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $this->format_data('address', $addresses);
+    }
+
     public function get_offer_id_name() {
         $query = 'SELECT id, name AS replacement FROM offers ORDER BY replacement ASC';
         $results = $this->db_utility->execute_query($query, null, 'assoc-array');
@@ -175,6 +181,12 @@ class AllDatabases
 
     public function get_customer_address_id_address() {
         $query = 'SELECT ca.id, CONCAT_WS(": ", customers.account_name, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode)) AS replacement FROM customer_address AS ca INNER JOIN customers ON ca.customer_id = customers.id';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
+
+    public function get_customer_billing_address_id_address() {
+        $query = 'SELECT ca.id, CONCAT_WS(": ", customers.account_name, CONCAT_WS(", ", invoice_address_one, invoice_address_two, invoice_address_three, invoice_address_four, invoice_postcode)) AS replacement FROM customer_address AS ca INNER JOIN customers ON ca.customer_id = customers.id';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
@@ -496,7 +508,6 @@ class CustomerDatabase
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
-
     function get_customer_id_from_email($email)
     {
         $query = 'SELECT id FROM customers WHERE email = ?';
@@ -1446,6 +1457,17 @@ class InvoiceDatabase
             ['type' => 'i', 'value' => $year],
             ['type' => 'i', 'value' => $monthStart],
             ['type' => 'i', 'value' => $monthEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_vat_data($startDate, $endDate) {
+        $query = 'SELECT COALESCE(SUM(i.total), 0) AS output_total, COALESCE(SUM(i.vat), 0) AS output_vat, COALESCE(SUM(p.vat), 0) AS input_total, COALESCE(SUM(p.vat), 0) AS input_vat FROM invoices AS i JOIN payments AS p WHERE i.created_at >= ? AND i.created_at <= ? AND p.date >= ? AND p.date <= ? AND i.payment_status = "Yes"';
+        $params = [
+            ['type' => 's', 'value' => $startDate],
+            ['type' => 's', 'value' => $endDate],
+            ['type' => 's', 'value' => $startDate],
+            ['type' => 's', 'value' => $endDate],
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }

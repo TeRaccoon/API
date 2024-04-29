@@ -69,6 +69,12 @@ function run_query() {
             $results = $invoice_database->get_total_invoice_value_per_day($dayStart, $dayEnd, $month, $year);
             break;
 
+        case 'vat-data':
+            $startDate = urldecode($_GET['start-date']);
+            $endDate = urldecode($_GET['end-date']);
+            $results = $invoice_database->get_vat_data($startDate, $endDate);
+            break;
+
         case "average-invoice-value-per-month":
             $monthStart = urldecode($_GET['monthStart']);
             $monthEnd = urldecode($_GET['monthEnd']);
@@ -230,6 +236,10 @@ function run_query() {
 
         case 'customer_address_id_full':
             $results = $all_databases->get_customer_address_id_address();
+            break;
+
+        case 'customer_billing_address_id_full':
+            $results = $all_databases->get_customer_billing_address_id_address();
             break;
 
         case "retail_item_id_name":
@@ -477,7 +487,14 @@ function get_display_data($data, $table_name, $all_databases) {
                     break;
 
                 case "customer_address":
-                    $assoc_table_data = $all_databases->get_customer_address();
+                    if ($assoc_column == "address_id")
+                    {
+                        $assoc_table_data = $all_databases->get_customer_address();
+                    }
+                    else
+                    {
+                        $assoc_table_data = $all_databases->get_customer_billing_address();
+                    }
                     break;
 
                 case "invoices":
