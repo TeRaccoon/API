@@ -1356,42 +1356,41 @@ class InvoiceDatabase
 
     public function get_debtor_data($startDay, $endDay)
     {
-        $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount, MAX(i.created_at) AS latest_created_at
-        FROM invoices AS i
-        INNER JOIN customers AS c ON i.customer_id = c.id
-        WHERE i.payment_status = "No" AND i.created_at >= (CURDATE()) - INTERVAL ? DAY AND i.created_at <= (CURDATE()) - INTERVAL ? DAY AND i.delivery_date < (CURDATE())
-        GROUP BY c.id';
-
-        $params = [
-            ['type' => 'i', 'value' => $endDay],
-            ['type' => 'i', 'value' => $startDay]
-        ];
+        if ($endDay == "null") 
+        {
+            $query = 'SELECT i.title, c.account_name, SUM(i.total) AS total_amount, i.created_at FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.created_at <= curdate() - INTERVAL ? DAY AND i.payment_status = "No" GROUP BY i.title, c.account_name, i.created_at';
+            $params = [
+                ['type' => 's', 'value' => $startDay]
+            ];
+        }
+        else
+        {
+            $query = 'SELECT i.title, c.account_name, SUM(i.total) AS total_amount, i.created_at FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.created_at >= curdate() - INTERVAL ? DAY AND i.created_at < (CURDATE()) - INTERVAL ? DAY AND i.payment_status = "No" GROUP BY i.title, c.account_name, i.created_at';
+            $params = [
+                ['type' => 's', 'value' => $endDay],
+                ['type' => 's', 'value' => $startDay]
+            ];
+        }
         $debtor_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $debtor_data;
     }
-
-    public function get_debtor_data_limitless($startDay)
-    {
-        $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount, MAX(i.created_at) AS latest_created_at
-        FROM invoices AS i
-        INNER JOIN customers AS c ON i.customer_id = c.id
-        WHERE i.payment_status = "No" AND i.created_at < (CURDATE()) - INTERVAL ? DAY AND i.delivery_date < (CURDATE())
-        GROUP BY c.id';
-
-        $params = [
-            ['type' => 's', 'value' => $startDay]
-        ];
-        $debtor_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
-        return $debtor_data;
-    }
-
     public function get_creditor_data($startDay, $endDay)
     {
-        $query = 'SELECT c.id, c.forename, c.surname, SUM(i.total) AS total_amount FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.created_at >= curdate() - INTERVAL ? DAY AND i.created_at < curdate() - INTERVAL ? DAY AND i.customer_id = c.id AND i.payment_status = "No" AND i.delivery_date < curdate() GROUP BY c.id';
-        $params = [
-            ['type' => 's', 'value' => $endDay],
-            ['type' => 's', 'value' => $startDay]
-        ];
+        if ($endDay == "null") 
+        {
+            $query = 'SELECT i.reference, s.account_name, SUM(i.total) AS total_amount, i.created_at FROM supplier_invoices AS i INNER JOIN suppliers AS s ON i.supplier_id = s.id WHERE i.created_at <= curdate() - INTERVAL ? DAY AND i.payment_status = "No" GROUP BY i.reference, s.account_name, i.created_at';
+            $params = [
+                ['type' => 's', 'value' => $startDay]
+            ];
+        }
+        else
+        {
+            $query = 'SELECT i.reference, s.account_name, SUM(i.total) AS total_amount, i.created_at FROM supplier_invoices AS i INNER JOIN suppliers AS s ON i.supplier_id = s.id WHERE i.created_at >= curdate() - INTERVAL ? DAY AND i.created_at < (CURDATE()) - INTERVAL ? DAY AND i.payment_status = "No" GROUP BY i.reference, s.account_name, i.created_at';
+            $params = [
+                ['type' => 's', 'value' => $endDay],
+                ['type' => 's', 'value' => $startDay]
+            ];
+        }
         $creditor_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $creditor_data;
     }

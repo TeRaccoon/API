@@ -130,17 +130,13 @@ function run_query() {
             $results = $invoice_database->get_creditor_data($_GET['start-day'], $_GET['end-day']);
             break;
 
+        case "debtor":
+            $results = $invoice_database->get_debtor_data($_GET['start-day'], $_GET['end-day']);
+            break;
+
         case "edit-form-data":
             $table_name = urldecode($_GET['filter']);
             $results = construct_edit_form($table_name, $all_databases);
-            break;
-
-        case "debtor":
-            if ($_GET['end-day'] != "null") {
-                $results = $invoice_database->get_debtor_data($_GET['start-day'], $_GET['end-day']);
-            } else {
-                $results = $invoice_database->get_debtor_data_limitless($_GET['start-day']);
-            }
             break;
 
         case "profit-loss":
