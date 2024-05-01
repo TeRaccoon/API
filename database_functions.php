@@ -1471,7 +1471,35 @@ class InvoiceDatabase
     }
 
     public function get_vat_data($startDate, $endDate) {
-        $query = 'SELECT COALESCE(SUM(i.total), 0) AS output_total, COALESCE(SUM(i.vat), 0) AS output_vat, COALESCE(SUM(p.vat), 0) AS input_total, COALESCE(SUM(p.vat), 0) AS input_vat FROM invoices AS i JOIN payments AS p WHERE i.created_at >= ? AND i.created_at <= ? AND p.date >= ? AND p.date <= ? AND i.payment_status = "Yes"';
+        $query = 'SELECT 
+        COALESCE(SUM(output_total), 0) AS output_total, 
+        COALESCE(SUM(output_vat), 0) AS output_vat, 
+        COALESCE(SUM(input_total), 0) AS input_total, 
+        COALESCE(SUM(input_vat), 0) AS input_vat
+    FROM (
+        SELECT 
+            COALESCE(SUM(total), 0) AS output_total, 
+            COALESCE(SUM(vat), 0) AS output_vat, 
+            0 AS input_total, 
+            0 AS input_vat 
+        FROM 
+            invoices 
+        WHERE 
+            created_at >= ? 
+            AND created_at <= ? 
+            AND payment_status = "Yes"
+        UNION ALL
+        SELECT 
+            0 AS output_total, 
+            0 AS output_vat, 
+            COALESCE(SUM(total), 0) AS input_total, 
+            COALESCE(SUM(vat), 0) AS input_vat 
+        FROM 
+            payments 
+        WHERE 
+            date >= ? 
+            AND date <= ?
+    ) AS combined_data';
         $params = [
             ['type' => 's', 'value' => $startDate],
             ['type' => 's', 'value' => $endDate],
