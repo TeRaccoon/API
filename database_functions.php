@@ -411,6 +411,14 @@ class AllDatabases
         $item_locations = $this->db_utility->execute_query($query, $params, 'assoc-array')['count'];
         return $item_locations;
     }
+
+    function get_image_count_from_page_section_id($page_section_id) {
+        $query = 'SELECT COUNT(image_file_name) AS count FROM image_locations WHERE page_section_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $page_section_id],
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array')['count'];
+    }
 }
 
 class CustomerDatabase
