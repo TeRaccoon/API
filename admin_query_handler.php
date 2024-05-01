@@ -26,6 +26,7 @@ function run_query() {
 
     $conn->connect();
     $results = null;
+    $filter = key_exists('filter', $_GET) ? urldecode($_GET['filter']) : null;
     switch ($query) {
         case "table":
             $results = construct_table($all_databases);
@@ -298,6 +299,10 @@ function run_query() {
         case "image-count-from-item-id":
             $item_id = urldecode($_GET['filter']);
             $results = $all_databases->get_images_count_from_item_id($item_id);
+            break;
+
+        case "image-count-from-page-section-id":
+            $results = $all_databases->get_image_count_from_page_section_id($filter);
             break;
         
         case "append-or-add":
