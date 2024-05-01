@@ -290,6 +290,11 @@ function run_query() {
             $results = $all_databases->get_images_from_item_id($item_id);
             break;
 
+        case "images-from-page-section-id":
+            $page_section_id = urldecode($_GET['filter']);
+            $results = $all_databases->get_images_from_page_section_id($page_section_id);
+            break;
+
         case "image-count-from-item-id":
             $item_id = urldecode($_GET['filter']);
             $results = $all_databases->get_images_count_from_item_id($item_id);

@@ -387,12 +387,20 @@ class AllDatabases
     }
 
     function get_images_from_item_id($item_id) {
-        $query = 'SELECT image_file_name FROM retail_item_images AS rii WHERE rii.item_id = ?';
+        $query = 'SELECT image_file_name FROM retail_item_images WHERE item_id = ?';
         $params = [
             ['type' => 'i', 'value' => $item_id],
         ];
         $item_locations = $this->db_utility->execute_query($query, $params, 'array');
         return $item_locations;
+    }
+
+    function get_images_from_page_section_id($page_section_id) {
+        $query = 'SELECT image_file_name FROM image_locations WHERE page_section_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $page_section_id],
+        ];
+        return $this->db_utility->execute_query($query, $params, 'array');
     }
 
     function get_images_count_from_item_id($item_id) {
