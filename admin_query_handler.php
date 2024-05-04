@@ -119,8 +119,7 @@ function run_query() {
             break;
 
         case "next-invoice-id":
-            $tableName = urldecode($_GET['filter']);
-            $results = $invoice_database->get_next_invoice_id($tableName);
+            $results = $invoice_database->get_next_invoice_id($filter);
             break;
 
         case "account-balances":
@@ -136,8 +135,7 @@ function run_query() {
             break;
 
         case "edit-form-data":
-            $table_name = urldecode($_GET['filter']);
-            $results = construct_edit_form($table_name, $all_databases);
+            $results = construct_edit_form($filter, $all_databases);
             break;
 
         case "profit-loss":
@@ -149,13 +147,11 @@ function run_query() {
             break;
 
         case "invoices-due":
-            $age = urldecode($_GET['filter']);
-            $results = $invoice_database->get_invoices_due($age);
+            $results = $invoice_database->get_invoices_due($filter);
             break;
 
         case "invoice-month-totals":
-            $year = urldecode($_GET['filter']);
-            $results = $invoice_database->get_month_totals($year);
+            $results = $invoice_database->get_month_totals($filter);
             break;
 
         case "total-invoices-month-profit":
@@ -167,13 +163,11 @@ function run_query() {
             break;
 
         case "stocked-items":
-            $item_id = urldecode($_GET['filter']);
-            $results = $items_database->get_stock_from_item_id($item_id);
+            $results = $items_database->get_stock_from_item_id($filter);
             break;
 
         case "total-stock-from-item-id":
-            $item_id = urldecode($_GET['filter']);
-            $results = $items_database->get_total_stock_from_item_id($item_id);
+            $results = $items_database->get_total_stock_from_item_id($filter);
             break;
 
         case "stocked-item-images":
@@ -181,8 +175,7 @@ function run_query() {
             break;
 
         case "invoice-info":
-            $invoice_id = urldecode($_GET['filter']);
-            $results = $invoice_database->get_invoice_info($invoice_id);
+            $results = $invoice_database->get_invoice_info($filter);
             break;
 
         case "invoices-due-today-basic":
@@ -190,13 +183,11 @@ function run_query() {
             break;
 
         case "delivery-info":
-            $invoice_id = urldecode($_GET['filter']);
-            $results = get_delivery_info($all_databases, $invoice_database, $customer_database, $invoice_id);
+            $results = get_delivery_info($all_databases, $invoice_database, $customer_database, $filter);
             break;
 
         case "invoice-products":
-            $invoice_id = urldecode($_GET['filter']);
-            $results = $invoice_database->get_invoice_products($invoice_id);
+            $results = $invoice_database->get_invoice_products($filter);
             break;
 
         case "items_id_name":
@@ -272,13 +263,11 @@ function run_query() {
             break;
 
         case "invoiced-items":
-            $invoice_id = urldecode($_GET['filter']);
-            $results = $invoice_database->get_invoiced_items_from_id($invoice_id);
+            $results = $invoice_database->get_invoiced_items_from_id($filter);
             break;
 
         case "stocked-items-invoice":
-            $invoice_id = urldecode($_GET['filter']);
-            $results = $items_database->get_stock_from_invoice_id($invoice_id);
+            $results = $items_database->get_stock_from_invoice_id($filter);
             break;
 
         case "invoiced-items-basic-ids":
@@ -287,18 +276,15 @@ function run_query() {
             break;
 
         case "images-from-item-id":
-            $item_id = urldecode($_GET['filter']);
-            $results = $all_databases->get_images_from_item_id($item_id);
+            $results = $all_databases->get_images_from_item_id($filter);
             break;
 
         case "images-from-page-section-id":
-            $page_section_id = urldecode($_GET['filter']);
-            $results = $all_databases->get_images_from_page_section_id($page_section_id);
+            $results = $all_databases->get_images_from_page_section_id($filter);
             break;
 
         case "image-count-from-item-id":
-            $item_id = urldecode($_GET['filter']);
-            $results = $all_databases->get_images_count_from_item_id($item_id);
+            $results = $all_databases->get_images_count_from_item_id($filter);
             break;
 
         case "image-count-from-page-section-id":
@@ -325,8 +311,7 @@ function run_query() {
             break;
 
         case 'customer-addresses-by-id':
-            $customer_id = urldecode($_GET['filter']);
-            $results = $customer_database->get_address_from_customer_id($customer_id);
+            $results = $customer_database->get_address_from_customer_id($filter);
             break;
 
         case 'calculate-distance':
@@ -336,8 +321,7 @@ function run_query() {
             break;
 
         case 'delete-image':
-            $image_file_name = urldecode($_GET['filter']);
-            $results = $all_databases->delete_image_by_file_name($image_file_name);
+            $results = $all_databases->delete_image_by_file_name($filter);
             break;
     }
     echo json_encode($results);
