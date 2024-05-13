@@ -40,6 +40,22 @@ function run_query() {
             $results = $invoice_database->get_total_invoices_month();
             break;
 
+        case "vat-returns":
+            $results = $all_databases->get_vat_returns();
+            break;
+
+        case "vat-history-by-group-id":
+            $results = $all_databases->get_vat_history_by_group_id($filter);
+            break;
+        
+        case "vat-groups":
+            $results = $all_databases->get_vat_groups();
+            break;
+
+        case "delete-vat-returns-by-group-id":
+            $results = $all_databases->delete_vat_history_by_group_id($filter);
+            break;
+
         case "total-invoices-per-month":
             $monthStart = urldecode($_GET['monthStart']);
             $monthEnd = urldecode($_GET['monthEnd']);

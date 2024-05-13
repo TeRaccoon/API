@@ -68,6 +68,71 @@ class AllDatabases
         $this->db_utility = $db_utility;
     }
 
+    public function get_vat_returns() {
+        $query = 'SELECT * FROM vat_returns';
+        return $this->db_utility->execute_query($query, null, 'assoc-array');
+    }
+
+    public function get_vat_history_by_group_id($vat_group_id) {
+        $query = 'SELECT * FROM vat_returns WHERE vat_group_id = ?';
+        $params = [
+            ['type' => 's', 'value' => $vat_group_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function delete_vat_history_by_group_id($vat_group_id) {
+        $query = 'DELETE FROM vat_returns WHERE vat_group_id = ?';
+        $params = [
+            ['type' => 's', 'value' => $vat_group_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, false);
+    }
+
+    public function get_vat_groups() {
+        $query = 'SELECT DISTINCT vat_group_id FROM vat_returns';
+        return $this->db_utility->execute_query($query, null, 'array');
+    }
+
+    public function get_stock_data_from_item_id($item_id) {
+        $query = 'SELECT si.id, (CASE 
+            WHEN si.packing_format = "Individual" THEN si.quantity
+            WHEN si.packing_format = "Box" THEN si.quantity * i.box_size
+            WHEN si.packing_format = "Pallet" THEN si.quantity * i.pallet_size
+        END) AS quantity, (
+            CASE 
+            WHEN si.packing_format = "Individual" THEN 1
+            WHEN si.packing_format = "Box" THEN i.box_size
+            WHEN si.packing_format = "Pallet" THEN i.pallet_size
+        END) AS modifier, si.expiry_date AS expiry_date
+        FROM stocked_items si
+        JOIN 
+            items i ON si.item_id = i.id
+        WHERE item_id = ? ORDER BY si.expiry_date';
+
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'array');
+    }
+
+    public function update_stock_quantity_from_id($id, $quantity) {
+        if ($quantity == 0) {
+            $query = 'DELETE FROM stocked_items WHERE id = ?';
+            $params = [
+                ['type' => 'i', 'value' => $id]
+            ];
+        } else {
+            $query = 'UPDATE stocked_items SET quantity = ? WHERE id = ?';
+            $params = [
+                ['type' => 'i', 'value' => 'quantity'],
+                ['type' => 'i', 'value' => $id]
+            ];
+        }
+        
+        $this->db_utility->execute_query($query, $params, false);
+    }
+
     public function get_total_stock() {
         $query = 'SELECT 
         si.item_id, 
@@ -1156,6 +1221,44 @@ class InvoiceDatabase
     public function __construct($db_utility)
     {
         $this->db_utility = $db_utility;
+    }
+
+    public function update_invoice_value_from_invoiced_item_id($invoice_id) {
+        $query = 'UPDATE invoices
+        SET net_value = (
+            SELECT 
+                SUM(
+                    invoiced_items.quantity *
+                    CASE
+                        WHEN customers.customer_type = "Retail" THEN items.retail_price
+                        WHEN customers.customer_type = "Wholesale" THEN items.wholesale_price
+                    END *
+                    (1 - invoiced_items.discount/100) *
+                    (1 - customers.discount/100)
+                ) AS total
+            FROM 
+                invoiced_items
+            JOIN 
+                items ON invoiced_items.item_id = items.id
+            JOIN
+                invoices ON invoiced_items.invoice_id = invoices.id
+            JOIN
+                customers ON invoices.customer_id = customers.id
+            WHERE
+                invoices.id = ?
+        )
+        WHERE
+            invoices.id = ?';
+
+        $params = [
+            ['type' => 'i', 'value' => $invoice_id]
+        ];
+
+        return $this->db_utility->execute_query($query, $params, false);
+    }
+
+    public function update_stock_from_invoiced_item_id($id) {
+        $query = '';
     }
 
     public function get_invoice_id_titles() {

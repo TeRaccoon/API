@@ -16,6 +16,7 @@ if (!isset($_SESSION['CREATED'])) {
 require_once 'dbh.php';
 require_once 'database_functions.php';
 require_once 'database_utility.php';
+require_once 'sync.php';
 
 $input_data = file_get_contents("php://input");
 $data = json_decode($input_data, true);
@@ -99,7 +100,7 @@ function insert($conn, $database_utility, $data)
     $conn->query($query);
     $conn->commit();
 
-    synchronise($conn, $table_name, null, null);
+    synchronise($conn, $table_name, null, null, $data);
 }
 function append($conn, $database_utility, $user_database, $customer_database, $data)
 {
@@ -118,7 +119,7 @@ function append($conn, $database_utility, $user_database, $customer_database, $d
     $conn->query($query);
     $conn->commit();
 
-    synchronise($conn, $table_name, $data['id'], $query);
+    synchronise($conn, $table_name, $data['id'], $query, $data);
 }
 
 function append_user($user_database, $username, $data)
@@ -157,7 +158,7 @@ function drop($conn, $data)
         $query = 'DELETE FROM ' . $table_name . ' WHERE ID = ' . $ids;
     }
 
-    synchronise($conn, $table_name, $ids, $query);
+    synchronise($conn, $table_name, $ids, $query, $data);
 }
 
 function check_date($original_date)
@@ -167,7 +168,7 @@ function check_date($original_date)
     }
     return date('Y-m-d', strtotime($original_date));
 }
-function synchronise($conn, $table_name, $id, $query_string)
+function synchronise($conn, $table_name, $id, $query_string, $data)
 {
     require_once 'database_functions.php';
     require_once 'database_utility.php';
@@ -188,39 +189,8 @@ function synchronise($conn, $table_name, $id, $query_string)
     $id = is_array($id) ? $id : [$id];
 
     switch ($table_name) {
-        case "invoiced_items":
-            foreach ($id as $item_id) {
-                $invoiced_item_data = $item_database->get_invoiced_items_data($item_id);
-
-                if ($action == "delete") { // Need to retrieve data from what was deleted before deleting
-                    $database_utility->execute_delete_query($table_name, $item_id);
-                }
-                $customer_id = $invoice_database->get_customer_id($invoiced_item_data['invoice_id']);
-
-                update_invoiced_item($customer_database, $item_database, $retail_items_database, $invoiced_item_data, $customer_id);
-            }
-
-            if (!$conn->commit()) {
-                echo('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!'. 'other'. 'F_SQL-MD-0002'. $conn->error);
-                $conn->abort();
-            }
-            $debt = $invoice_database->get_customer_debt($customer_id);
-
-            $conn->query("UPDATE customers SET outstanding_balance = '" . $debt . "' WHERE id = '" . $customer_id . "'");
-            break;
-
-        case "customer_payments":
-            foreach ($id as $payment_id) {
-                $payment_data = $customer_payments_database->get_payment_data($payment_id);
-                update_customer_payment($invoice_database, $customer_database, $customer_payments_database, $payment_data, $payment_id);
-            }
-            break;
-
-        default:
-            if (!$conn->commit()) {
-                echo('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!' . 'other' . 'F_SQL-MD-0003' . $conn->error);
-                echo "Ruh roh";
-            }
+        case 'invoiced_items':
+            sync_invoiced_items($database_utility, $id, $action, $data);
             break;
     }
 
@@ -230,6 +200,15 @@ function synchronise($conn, $table_name, $id, $query_string)
 
     if (!$conn->commit()) {
         echo('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!' . 'other' . 'F_SQL-MD-0004' . $conn->error);
+    }
+}
+
+function sync_invoiced_items($database_utility, $id, $action, $data) {
+    
+    switch ($action) {
+        case "insert":
+            sync_invoiced_items_insert($database_utility, $id, $action, $data['item_id'], $data['quantity']);
+            break;
     }
 }
 
