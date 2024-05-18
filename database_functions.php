@@ -113,24 +113,75 @@ class AllDatabases
         $params = [
             ['type' => 'i', 'value' => $item_id]
         ];
-        return $this->db_utility->execute_query($query, $params, 'array');
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
     public function update_stock_quantity_from_id($id, $quantity) {
-        if ($quantity == 0) {
-            $query = 'DELETE FROM stocked_items WHERE id = ?';
-            $params = [
-                ['type' => 'i', 'value' => $id]
-            ];
-        } else {
-            $query = 'UPDATE stocked_items SET quantity = ? WHERE id = ?';
-            $params = [
-                ['type' => 'i', 'value' => 'quantity'],
-                ['type' => 'i', 'value' => $id]
-            ];
-        }
+        $query = 'UPDATE stocked_items SET quantity = ? WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $quantity],
+            ['type' => 'i', 'value' => $id]
+        ];
         
-        $this->db_utility->execute_query($query, $params, false);
+        return $this->db_utility->execute_query($query, $params, false);
+    }
+
+    public function action_stock_control($stock_id, $invoiced_item_id, $quantity, $action = 'insert') {
+        switch ($action) {
+            case 'insert':
+                $query = 'INSERT INTO stock_keys (stock_id, invoiced_item_id, quantity) VALUES (?, ?, ?)';
+                break;
+
+            default:
+                $query = 'INSERT INTO stock_keys (stock_id, invoiced_item_id, quantity) VALUES (?, ?, ?)';
+                break;
+        }
+
+        $params = [
+            ['type' => 'i', 'value' => $stock_id],
+            ['type' => 'i', 'value' => $invoiced_item_id],
+            ['type' => 'i', 'value' => $quantity],
+        ];
+        
+        return $this->db_utility->execute_query($query, $params, false);
+    }
+
+    public function get_stock_key_data_from_invoiced_item_id($id)
+    {
+        $query = 'SELECT * FROM stock_keys WHERE invoiced_item_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id]
+        ];
+
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function revert_stock_key_from_id($id, $quantity)
+    {
+        $query = 'SELECT quantity FROM stocked_items WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id]
+        ];
+
+        $quantity += $this->db_utility->execute_query($query, $params, 'array')[0];
+
+        $query = 'UPDATE stocked_items SET quantity = ? WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $quantity],
+            ['type' => 'i', 'value' => $id]
+        ];
+
+        return $this->db_utility->execute_query($query, $params, false);
+    }
+
+    public function delete_stock_key_from_stock_id($invoiced_item_id)
+    {
+        $query = 'DELETE FROM stock_keys WHERE invoiced_item_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $invoiced_item_id]
+        ];
+
+        return $this->db_utility->execute_query($query, $params, false);
     }
 
     public function get_total_stock() {
@@ -1224,34 +1275,40 @@ class InvoiceDatabase
     }
 
     public function update_invoice_value_from_invoiced_item_id($invoice_id) {
-        $query = 'UPDATE invoices
-        SET net_value = (
-            SELECT 
+        $query = 'SELECT
                 SUM(
                     invoiced_items.quantity *
                     CASE
                         WHEN customers.customer_type = "Retail" THEN items.retail_price
                         WHEN customers.customer_type = "Wholesale" THEN items.wholesale_price
                     END *
-                    (1 - invoiced_items.discount/100) *
-                    (1 - customers.discount/100)
+                    (1 - invoiced_items.discount / 100) *
+                    (1 - customers.discount / 100)
                 ) AS total
-            FROM 
+            FROM
                 invoiced_items
-            JOIN 
+            JOIN
                 items ON invoiced_items.item_id = items.id
             JOIN
                 invoices ON invoiced_items.invoice_id = invoices.id
             JOIN
                 customers ON invoices.customer_id = customers.id
             WHERE
-                invoices.id = ?
-        )
-        WHERE
-            invoices.id = ?';
+                invoices.id = ?';
 
         $params = [
             ['type' => 'i', 'value' => $invoice_id]
+        ];
+
+        $total = $this->db_utility->execute_query($query, $params, 'array');
+        
+        $query = 'UPDATE invoices
+        SET net_value = ?
+        WHERE id = ?';
+
+        $params = [
+            ['type' => 'i', 'value' => $total],
+            ['type' => 'i', 'value' => $invoice_id],
         ];
 
         return $this->db_utility->execute_query($query, $params, false);
@@ -1323,8 +1380,8 @@ class InvoiceDatabase
     }
 
     public function get_next_invoice_id($table_name) {
-        $query = 'SET information_schema_stats_expiry = 0';
-        $this->db_utility->execute_query($query, null, false);
+        //$query = 'SET information_schema_stats_expiry = 0';
+        // $this->db_utility->execute_query($query, null, false);
 
         $query = 'SELECT AUTO_INCREMENT AS next_id FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $table_name . '"';
         $next_id = $this->db_utility->execute_query($query, null, 'assoc-array')['next_id'];

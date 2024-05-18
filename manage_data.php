@@ -36,8 +36,8 @@ if (isset($data['action'])) {
 
     switch ($data['action']) {
         case 'add':
-            insert($database, $database_utility, $data);
-            $response = array('success' => true, 'message' => 'Record added successfully');
+            $response = insert($database, $database_utility, $data);
+            // $response = array('success' => true, 'message' => 'Record added successfully');
             break;
 
         case 'append':
@@ -98,9 +98,8 @@ function insert($conn, $database_utility, $data)
     $query = $database_utility->construct_insert_query($table_name, $field_names, $submitted_data, $data);
 
     $conn->query($query);
-    $conn->commit();
 
-    synchronise($conn, $table_name, null, null, $data);
+    return synchronise($conn, $table_name, null, null, $data);
 }
 function append($conn, $database_utility, $user_database, $customer_database, $data)
 {
@@ -174,11 +173,6 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
     require_once 'database_utility.php';
 
     $database_utility = new DatabaseUtility($conn);
-    $customer_database = new CustomerDatabase($database_utility);
-    $item_database = new ItemDatabase($database_utility);
-    $invoice_database = new InvoiceDatabase($database_utility);
-    $customer_payments_database = new CustomerPaymentsDatabase($database_utility);
-    $retail_items_database = new RetailItemsDatabase($database_utility);
 
     $action = $_POST['action'];
 
@@ -187,10 +181,13 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
     }
 
     $id = is_array($id) ? $id : [$id];
-
     switch ($table_name) {
         case 'invoiced_items':
-            sync_invoiced_items($database_utility, $id, $action, $data);
+            $response = sync_invoiced_items($database_utility, $id[0], $action, $data);
+            break;
+
+        default:
+        $response = array('success' => true, 'message' => 'Record actioned successfully');
             break;
     }
 
@@ -201,43 +198,24 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
     if (!$conn->commit()) {
         echo('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!' . 'other' . 'F_SQL-MD-0004' . $conn->error);
     }
+
+    return $response;
 }
 
 function sync_invoiced_items($database_utility, $id, $action, $data) {
-    
     switch ($action) {
-        case "insert":
-            sync_invoiced_items_insert($database_utility, $id, $action, $data['item_id'], $data['quantity']);
-            break;
+        case "add":
+            return sync_invoiced_items_insert($database_utility, $id, $data['item_id'], $data['quantity']);
+
+        case "append":
+            return sync_invoiced_items_append($database_utility, $id, $data['item_id'], $data['quantity']);
+
+        case "delete":
+            return sync_invoiced_items_delete($database_utility, $id);
+        
+        default:
+            return array('success' => true, 'message' => 'Record actioned successfully');
     }
-}
-
-function update_customer_payment($invoice_database, $customer_database, $customer_payments_database, $payment_data, $id)
-{
-    $payment_status = $payment_data['status'];
-    $invoice_id = $payment_data['invoice_id'];
-    $customer_id = $payment_data['customer_id'];
-
-    if ($payment_status == 'Processed' || $_POST['status'] == 'Processed') {
-        $total_invoice_payments = $customer_payments_database->get_total_invoice_payments($invoice_id);
-    }
-}
-function update_invoiced_item($customer_database, $item_database, $retail_item_database, $invoiced_item_data, $customer_id)
-{
-    $discount = $customer_database->get_customer_discount($customer_id);
-    $invoice_values = get_invoice_value($item_database, $invoiced_item_data, $discount);
-
-    $item_id = $invoiced_item_data["item_id"];
-
-    //Amending item_invoice total to applied invoice
-    $customer_database->set_invoice_values($invoice_values[0], $invoice_values[1], $invoice_values[2], $invoiced_item_data["invoice_id"]);
-
-    //Check offer can expire
-    $new_total_sold = $item_database->get_calculated_total_sold($item_id);
-    manage_offers($item_database, $retail_item_database, $item_id, $new_total_sold);
-
-    //Appending total sold
-    $item_database->set_total_sold($new_total_sold, $item_id);
 }
 
 function manage_offers($item_database, $retail_item_database, $item_id, $new_total_sold) {
