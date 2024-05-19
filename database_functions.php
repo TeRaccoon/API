@@ -1463,6 +1463,15 @@ class InvoiceDatabase
         return $data;
     }
 
+    public function set_invoice_to_printed($invoice_id)
+    {
+        $query = 'UPDATE invoices SET printed = "Yes" WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $invoice_id]
+        ];
+        $this->db_utility->execute_query($query, $params, false);
+    }
+
     public function get_basic_invoiced_item_from_ids($invoice_ids)
     {
         $invoice_ids_array = explode(',', $invoice_ids);

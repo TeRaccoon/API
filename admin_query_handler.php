@@ -339,6 +339,10 @@ function run_query() {
         case 'delete-image':
             $results = $all_databases->delete_image_by_file_name($filter);
             break;
+
+        case 'set-to-printed':
+            $invoice_database->set_invoice_to_printed($filter);
+            break;
     }
     echo json_encode($results);
 }
