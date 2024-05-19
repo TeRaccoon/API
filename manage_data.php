@@ -116,7 +116,6 @@ function append($conn, $database_utility, $user_database, $customer_database, $d
     $query = $database_utility->construct_append_query($table_name, $field_names, $submitted_data);
 
     $conn->query($query);
-    $conn->commit();
 
     synchronise($conn, $table_name, $data['id'], $query, $data);
 }
@@ -183,7 +182,7 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
     $id = is_array($id) ? $id : [$id];
     switch ($table_name) {
         case 'invoiced_items':
-            $response = sync_invoiced_items($database_utility, $id[0], $action, $data);
+            $response = sync_invoiced_items($database_utility, $id[0], $action, $data, $query_string);
             break;
 
         default:
@@ -202,7 +201,7 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
     return $response;
 }
 
-function sync_invoiced_items($database_utility, $id, $action, $data) {
+function sync_invoiced_items($database_utility, $id, $action, $data, $query_string) {
     switch ($action) {
         case "add":
             return sync_invoiced_items_insert($database_utility, $id, $data['item_id'], $data['quantity']);
@@ -211,7 +210,7 @@ function sync_invoiced_items($database_utility, $id, $action, $data) {
             return sync_invoiced_items_append($database_utility, $id, $data['item_id'], $data['quantity']);
 
         case "delete":
-            return sync_invoiced_items_delete($database_utility, $id);
+            return sync_invoiced_items_delete($database_utility, $id, $query_string);
         
         default:
             return array('success' => true, 'message' => 'Record actioned successfully');

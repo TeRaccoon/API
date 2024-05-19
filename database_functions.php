@@ -37,14 +37,14 @@ class UserDatabase
     function change_password($username, $password)
     {
         $password_hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
-    
+
         $query = 'UPDATE users SET password = ? WHERE username = ?';
-        
+
         $params = [
             ['type' => 's', 'value' => $password_hash],
             ['type' => 's', 'value' => $username],
         ];
-        
+
         // Execute the query
         $this->db_utility->execute_query($query, $params, false);
     }
@@ -68,12 +68,14 @@ class AllDatabases
         $this->db_utility = $db_utility;
     }
 
-    public function get_vat_returns() {
+    public function get_vat_returns()
+    {
         $query = 'SELECT * FROM vat_returns';
         return $this->db_utility->execute_query($query, null, 'assoc-array');
     }
 
-    public function get_vat_history_by_group_id($vat_group_id) {
+    public function get_vat_history_by_group_id($vat_group_id)
+    {
         $query = 'SELECT * FROM vat_returns WHERE vat_group_id = ?';
         $params = [
             ['type' => 's', 'value' => $vat_group_id]
@@ -81,7 +83,8 @@ class AllDatabases
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function delete_vat_history_by_group_id($vat_group_id) {
+    public function delete_vat_history_by_group_id($vat_group_id)
+    {
         $query = 'DELETE FROM vat_returns WHERE vat_group_id = ?';
         $params = [
             ['type' => 's', 'value' => $vat_group_id]
@@ -89,12 +92,14 @@ class AllDatabases
         return $this->db_utility->execute_query($query, $params, false);
     }
 
-    public function get_vat_groups() {
+    public function get_vat_groups()
+    {
         $query = 'SELECT DISTINCT vat_group_id FROM vat_returns';
         return $this->db_utility->execute_query($query, null, 'array');
     }
 
-    public function get_stock_data_from_item_id($item_id) {
+    public function get_stock_data_from_item_id($item_id)
+    {
         $query = 'SELECT si.id, (CASE 
             WHEN si.packing_format = "Individual" THEN si.quantity
             WHEN si.packing_format = "Box" THEN si.quantity * i.box_size
@@ -116,17 +121,19 @@ class AllDatabases
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function update_stock_quantity_from_id($id, $quantity) {
+    public function update_stock_quantity_from_id($id, $quantity)
+    {
         $query = 'UPDATE stocked_items SET quantity = ? WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $quantity],
             ['type' => 'i', 'value' => $id]
         ];
-        
+
         return $this->db_utility->execute_query($query, $params, false);
     }
 
-    public function action_stock_control($stock_id, $invoiced_item_id, $quantity, $action = 'insert') {
+    public function action_stock_control($stock_id, $invoiced_item_id, $quantity, $action = 'insert')
+    {
         switch ($action) {
             case 'insert':
                 $query = 'INSERT INTO stock_keys (stock_id, invoiced_item_id, quantity) VALUES (?, ?, ?)';
@@ -142,7 +149,7 @@ class AllDatabases
             ['type' => 'i', 'value' => $invoiced_item_id],
             ['type' => 'i', 'value' => $quantity],
         ];
-        
+
         return $this->db_utility->execute_query($query, $params, false);
     }
 
@@ -184,7 +191,8 @@ class AllDatabases
         return $this->db_utility->execute_query($query, $params, false);
     }
 
-    public function get_total_stock() {
+    public function get_total_stock()
+    {
         $query = 'SELECT 
         si.item_id, 
         SUM(
@@ -205,7 +213,8 @@ class AllDatabases
         return $results;
     }
 
-    public function get_total_stock_by_id($item_id) {
+    public function get_total_stock_by_id($item_id)
+    {
         $query = 'SELECT 
         SUM(
             CASE 
@@ -229,7 +238,8 @@ class AllDatabases
         return $results;
     }
 
-    public function get_stock_by_id($item_id) {
+    public function get_stock_by_id($item_id)
+    {
         $query = 'SELECT 
         si.packing_format,
         SUM(
@@ -256,25 +266,29 @@ class AllDatabases
         return $results;
     }
 
-    public function get_customer_address() {
+    public function get_customer_address()
+    {
         $query = 'SELECT id, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode) AS address FROM customer_address';
         $addresses = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $this->format_data('address', $addresses);
     }
 
-    public function get_customer_billing_address() {
+    public function get_customer_billing_address()
+    {
         $query = 'SELECT id, CONCAT_WS(", ", invoice_address_one, invoice_address_two, invoice_address_three, invoice_address_four, delivery_postcode) AS address FROM customer_address';
         $addresses = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $this->format_data('address', $addresses);
     }
 
-    public function get_offer_id_name() {
+    public function get_offer_id_name()
+    {
         $query = 'SELECT id, name AS replacement FROM offers ORDER BY replacement ASC';
         $results = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $results;
     }
 
-    public function get_coordinates_from_postcode($postcode) {
+    public function get_coordinates_from_postcode($postcode)
+    {
         $query = "SELECT latitude, longitude FROM postcodelatlng WHERE REPLACE(postcode, ' ', '') = ?";
         $params = [
             ['type' => 's', 'value' => $postcode]
@@ -283,31 +297,36 @@ class AllDatabases
         return $coordinates;
     }
 
-    public function get_warehouse_id_names() {
+    public function get_warehouse_id_names()
+    {
         $query = 'SELECT id, name AS replacement FROM warehouse ORDER BY replacement ASC';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
 
-    public function get_supplier_invoice_id_reference() {
+    public function get_supplier_invoice_id_reference()
+    {
         $query = 'SELECT id, reference AS replacement FROM supplier_invoices';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
 
-    public function get_customer_address_id_address() {
+    public function get_customer_address_id_address()
+    {
         $query = 'SELECT ca.id, CONCAT_WS(": ", customers.account_name, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode)) AS replacement FROM customer_address AS ca INNER JOIN customers ON ca.customer_id = customers.id';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
 
-    public function get_customer_billing_address_id_address() {
+    public function get_customer_billing_address_id_address()
+    {
         $query = 'SELECT ca.id, CONCAT_WS(": ", customers.account_name, CONCAT_WS(", ", invoice_address_one, invoice_address_two, invoice_address_three, invoice_address_four, invoice_postcode)) AS replacement FROM customer_address AS ca INNER JOIN customers ON ca.customer_id = customers.id';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
 
-    public function get_warehouse_name_from_id($warehouse_id) {
+    public function get_warehouse_name_from_id($warehouse_id)
+    {
         $query = 'SELECT name FROM warehouse WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $warehouse_id]
@@ -316,7 +335,8 @@ class AllDatabases
         return $warehouse_name;
     }
 
-    public function get_customer_postcode_from_id($customer_id) {
+    public function get_customer_postcode_from_id($customer_id)
+    {
         $query = 'SELECT postcode FROM customers WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $customer_id]
@@ -325,7 +345,8 @@ class AllDatabases
         return str_replace(' ', '', $postcode);
     }
 
-    public function get_postcode_from_warehouse_id($warehouse_id) {
+    public function get_postcode_from_warehouse_id($warehouse_id)
+    {
         $query = 'SELECT postcode FROM warehouse WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $warehouse_id]
@@ -342,7 +363,8 @@ class AllDatabases
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
-    public function delete_image_by_file_name($image_file_name) {
+    public function delete_image_by_file_name($image_file_name)
+    {
         $query = 'DELETE FROM retail_item_images WHERE image_file_name = ?';
         $params = [
             ['type' => 's', 'value' => $image_file_name]
@@ -376,19 +398,22 @@ class AllDatabases
         return $data;
     }
 
-    function get_page_section_id_names() {
+    function get_page_section_id_names()
+    {
         $query = 'SELECT id, name AS replacement FROM page_sections ORDER BY replacement ASC';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
 
-    function get_retail_item_id_names() {
+    function get_retail_item_id_names()
+    {
         $query = 'SELECT ri.id, i.item_name AS replacement FROM retail_items AS ri INNER JOIN items AS i ON ri.item_id = i.id ORDER BY replacement ASC';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
 
-    function get_supplier_id_names() {
+    function get_supplier_id_names()
+    {
         $query = 'SELECT id, account_name AS replacement FROM suppliers';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
@@ -415,19 +440,22 @@ class AllDatabases
         return $this->format_data("full_name", $names);
     }
 
-    function get_suppliers_name() {
+    function get_suppliers_name()
+    {
         $query = 'SELECT id, account_name FROM suppliers';
         $names = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $this->format_data("account_name", $names);
     }
 
-    function get_page_section_names() {
+    function get_page_section_names()
+    {
         $query = 'SELECT id, name FROM page_sections';
         $names = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $this->format_data('name', $names);
     }
 
-    function get_warehouse_names() {
+    function get_warehouse_names()
+    {
         $query = 'SELECT id, name FROM warehouse';
         $names = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $this->format_data('name', $names);
@@ -447,7 +475,8 @@ class AllDatabases
         return $this->format_data('item_name', $names);
     }
 
-    function get_retail_item_names() {
+    function get_retail_item_names()
+    {
         $query = 'SELECT ri.id, i.item_name FROM `items` AS i INNER JOIN `retail_items` AS ri ON ri.item_id = i.id';
         $names = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $this->format_data('item_name', $names);
@@ -502,7 +531,8 @@ class AllDatabases
         return $profit_loss_data;
     }
 
-    function get_images_from_item_id($item_id) {
+    function get_images_from_item_id($item_id)
+    {
         $query = 'SELECT image_file_name FROM retail_item_images WHERE item_id = ?';
         $params = [
             ['type' => 'i', 'value' => $item_id],
@@ -511,7 +541,8 @@ class AllDatabases
         return $item_locations;
     }
 
-    function get_images_from_page_section_id($page_section_id) {
+    function get_images_from_page_section_id($page_section_id)
+    {
         $query = 'SELECT image_file_name FROM image_locations WHERE page_section_id = ?';
         $params = [
             ['type' => 'i', 'value' => $page_section_id],
@@ -519,7 +550,8 @@ class AllDatabases
         return $this->db_utility->execute_query($query, $params, 'array');
     }
 
-    function get_images_count_from_item_id($item_id) {
+    function get_images_count_from_item_id($item_id)
+    {
         $query = 'SELECT COUNT(rii.image_file_name) AS count FROM retail_item_images AS rii WHERE rii.item_id = ?';
         $params = [
             ['type' => 'i', 'value' => $item_id],
@@ -528,7 +560,8 @@ class AllDatabases
         return $item_locations;
     }
 
-    function get_image_count_from_page_section_id($page_section_id) {
+    function get_image_count_from_page_section_id($page_section_id)
+    {
         $query = 'SELECT COUNT(image_file_name) AS count FROM image_locations WHERE page_section_id = ?';
         $params = [
             ['type' => 'i', 'value' => $page_section_id],
@@ -576,7 +609,7 @@ class CustomerDatabase
         return $details;
     }
 
-    function get_customer_wishlist_from_id($id) 
+    function get_customer_wishlist_from_id($id)
     {
         $query = 'SELECT 
         w.id AS id,
@@ -610,7 +643,8 @@ class CustomerDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    function get_order_history($user_id) {
+    function get_order_history($user_id)
+    {
         $query = 'SELECT title, status, net_value, VAT, total, payment_status FROM invoices WHERE customer_id = ?';
         $params = [
             ['type' => 'i', 'value' => $user_id]
@@ -618,7 +652,8 @@ class CustomerDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    function get_address_from_customer_id($customer_id) {
+    function get_address_from_customer_id($customer_id)
+    {
         $query = 'SELECT 
             id,
             invoice_address_one, 
@@ -701,7 +736,8 @@ class CustomerDatabase
         return $data;
     }
 
-    public function get_customer_delivery_info($customer_id) {
+    public function get_customer_delivery_info($customer_id)
+    {
         $query = 'SELECT account_name, address_line_1, address_line_2, address_line_3, address_line_4, postcode FROM customers WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $customer_id]
@@ -719,7 +755,8 @@ class ItemDatabase
         $this->db_utility = $db_utility;
     }
 
-    function get_products_expiring_soon() {
+    function get_products_expiring_soon()
+    {
         $query = 'SELECT expiry_warning_days FROM settings';
         $expiry_days = $this->db_utility->execute_query($query, null, 'assoc-array')['expiry_warning_days'];
 
@@ -727,11 +764,12 @@ class ItemDatabase
         $params = [
             ['type' => 'i', 'value' => $expiry_days]
         ];
-        
+
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    function get_low_stock_items() {
+    function get_low_stock_items()
+    {
         $query = 'SELECT i.item_name, si.quantity, wh.name FROM stocked_items AS si INNER JOIN items AS i ON si.item_id = i.id INNER JOIN warehouse AS wh ON si.warehouse_id = wh.id WHERE si.quantity < 10';
         $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $item_data;
@@ -754,11 +792,12 @@ class ItemDatabase
         total_income DESC
       LIMIT 1';
 
-      $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
-      return $item_data;
+        $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $item_data;
     }
 
-    function get_stock_from_item_id($item_id) {
+    function get_stock_from_item_id($item_id)
+    {
         $query = 'SELECT
         si.id,
         items.item_name,
@@ -788,7 +827,8 @@ class ItemDatabase
         return $stock_data;
     }
 
-    function get_stock_from_invoice_id($invoice_id) {
+    function get_stock_from_invoice_id($invoice_id)
+    {
         $query = 'SELECT
         si.id,
         items.item_name,
@@ -823,7 +863,8 @@ class ItemDatabase
         return $stock_data;
     }
 
-    function get_total_stock_from_item_id($item_id) {
+    function get_total_stock_from_item_id($item_id)
+    {
         $query = 'SELECT 
         si.item_id, 
         SUM(
@@ -850,7 +891,8 @@ class ItemDatabase
         return $total_stock;
     }
 
-    function get_least_income_item() {
+    function get_least_income_item()
+    {
         $query = 'SELECT 
         item_name, 
         unit_cost, 
@@ -866,8 +908,8 @@ class ItemDatabase
         total_income ASC
       LIMIT 1';
 
-      $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
-      return $item_data;
+        $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $item_data;
     }
 
     function get_least_purchased_item()
@@ -878,12 +920,14 @@ class ItemDatabase
         return $item_data;
     }
 
-    public function categories() {
+    public function categories()
+    {
         $query = 'SELECT DISTINCT name FROM categories';
         return $this->db_utility->execute_query($query, null, 'array');
     }
 
-    public function sub_categories() {
+    public function sub_categories()
+    {
         $query = 'SELECT DISTINCT name FROM sub_categories';
         return $this->db_utility->execute_query($query, null, 'array');
     }
@@ -1048,7 +1092,7 @@ class RetailItemsDatabase
         return $item_data;
     }
 
-    public function get_offer_from_item($item_id) 
+    public function get_offer_from_item($item_id)
     {
         $query = 'SELECT off.* FROM offers AS off INNER JOIN retail_items AS ri ON ri.offer_id = off.id WHERE ri.item_id = ?';
         $params = [
@@ -1057,7 +1101,8 @@ class RetailItemsDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function set_offer_quantity_limit($item_id, $quantity) {
+    public function set_offer_quantity_limit($item_id, $quantity)
+    {
         $query = 'UPDATE offers AS off SET off.quantity_limit = ? WHERE off.id IN (SELECT ri.offer_id FROM retail_items AS ri WHERE ri.item_id = ?)';
         $params = [
             ['type' => 'i', 'value' => $quantity],
@@ -1075,11 +1120,13 @@ class RetailItemsDatabase
         $this->db_utility->execute_query($query, $params, false);
     }
 
-    public function brands() {
+    public function brands()
+    {
         $query = 'SELECT DISTINCT brand FROM items WHERE brand IS NOT NULL';
         return $this->db_utility->execute_query($query, null, 'array');
     }
-    public function get_visible_categories() {
+    public function get_visible_categories()
+    {
         $query = 'SELECT name, image_file_name AS location FROM categories WHERE visible = "Yes"';
         $categories = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $categories;
@@ -1103,12 +1150,9 @@ class RetailItemsDatabase
     }
     public function get_top_products($limit, $customer_type)
     {
-        if ($customer_type == 'Retail') 
-        {
+        if ($customer_type == 'Retail') {
             $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Retail" OR visibility = "Both") ORDER BY i.total_sold DESC LIMIT 0, ?';
-        } 
-        else 
-        {
+        } else {
             $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both") ORDER BY i.total_sold DESC LIMIT 0, ?';
         }
         $params = [
@@ -1120,12 +1164,9 @@ class RetailItemsDatabase
 
     public function get_featured($limit, $customer_type)
     {
-        if ($customer_type == 'Retail') 
-        {
+        if ($customer_type == 'Retail') {
             $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Retail" OR visibility = "Both") AND i.featured = "Yes" ORDER BY i.total_sold DESC LIMIT 0, ?';
-        } 
-        else 
-        {
+        } else {
             $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both") AND i.featured = "Yes" ORDER BY i.total_sold DESC LIMIT 0, ?';
         }
         $params = [
@@ -1137,12 +1178,9 @@ class RetailItemsDatabase
 
     public function get_products_from_category($category, $customer_type)
     {
-        if ($customer_type == 'Retail') 
-        {
+        if ($customer_type == 'Retail') {
             $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE visible = "Yes" AND (visibility = "Retail" OR visibility = "Both") AND (category = ? OR sub_category = ?)';
-        }
-        else
-        {
+        } else {
             $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both") AND (category = ? OR sub_category = ?)';
         }
         $params = [
@@ -1155,12 +1193,9 @@ class RetailItemsDatabase
 
     public function get_products($customer_type)
     {
-        if ($customer_type == 'Retail') 
-        {
+        if ($customer_type == 'Retail') {
             $query = 'SELECT i.id, i.item_name AS name, i.retail_price AS price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE visible = "Yes" AND (visibility = "Retail" OR visibility = "Both")';
-        }
-        else
-        {
+        } else {
             $query = 'SELECT i.id, i.item_name AS name, i.wholesale_price AS price, i.box_price AS box_price, i.pallet_price AS pallet_price, off.offer_start, off.offer_end, i.discount, i.image_file_name AS image_location FROM items AS i LEFT JOIN offers AS off ON i.offer_id = off.id WHERE i.visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both")';
         }
         $product_names = $this->db_utility->execute_query($query, null, 'assoc-array');
@@ -1188,7 +1223,8 @@ class RetailItemsDatabase
         return $product_images;
     }
 
-    public function get_is_product_in_wishlist($id, $product_id) {
+    public function get_is_product_in_wishlist($id, $product_id)
+    {
         $query = 'SELECT COUNT(w.id) AS count FROM wishlist AS w INNER JOIN customers AS c ON w.customer_id = c.id WHERE c.id = ? AND w.item_id = ?';
         $params = [
             ['type' => 's', 'value' => $id],
@@ -1199,12 +1235,9 @@ class RetailItemsDatabase
 
     public function get_product_from_name($product_name, $customer_type)
     {
-        if ($customer_type == 'Retail') 
-        {
+        if ($customer_type == 'Retail') {
             $query = 'SELECT id, category, sub_category, description, brand, discount, item_name AS name, retail_price AS price FROM items WHERE item_name = ? AND visible = "Yes" AND (visibility = "Retail" OR visibility = "Both")';
-        }
-        else
-        {
+        } else {
             $query = 'SELECT id, category, sub_category, description, brand, discount, item_name AS name, wholesale_price AS price, box_price AS box_price, pallet_price AS pallet_price, box_size AS box_size, pallet_size AS pallet_size FROM items WHERE item_name = ? AND visible = "Yes" AND (visibility = "Wholesale" OR visibility = "Both")';
         }
         $params = [
@@ -1274,56 +1307,71 @@ class InvoiceDatabase
         $this->db_utility = $db_utility;
     }
 
-    public function update_invoice_value_from_invoiced_item_id($invoice_id) {
+    public function get_invoice_id_from_invoiced_item_id($invoiced_item_id)
+    {
+        $query = 'SELECT invoice_id FROM invoiced_items WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $invoiced_item_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'array');
+    }
+
+    public function update_invoice_value_from_invoiced_item_id($invoice_id)
+    {
         $query = 'SELECT
-                SUM(
-                    invoiced_items.quantity *
-                    CASE
-                        WHEN customers.customer_type = "Retail" THEN items.retail_price
-                        WHEN customers.customer_type = "Wholesale" THEN items.wholesale_price
-                    END *
-                    (1 - invoiced_items.discount / 100) *
-                    (1 - customers.discount / 100)
-                ) AS total
-            FROM
-                invoiced_items
-            JOIN
-                items ON invoiced_items.item_id = items.id
-            JOIN
-                invoices ON invoiced_items.invoice_id = invoices.id
-            JOIN
-                customers ON invoices.customer_id = customers.id
-            WHERE
-                invoices.id = ?';
+        SUM(
+            invoiced_items.quantity *
+            CASE
+                WHEN customers.customer_type = "Retail" THEN items.retail_price
+                WHEN customers.customer_type = "Wholesale" THEN items.wholesale_price
+            END *
+            (1 - invoiced_items.discount / 100) *
+            (1 - customers.discount / 100)
+        ) AS total
+    FROM
+        invoiced_items
+    JOIN
+        items ON invoiced_items.item_id = items.id
+    JOIN
+        invoices ON invoiced_items.invoice_id = invoices.id
+    JOIN
+        customers ON invoices.customer_id = customers.id
+    WHERE
+        invoices.id = ?
+    GROUP BY
+        invoices.id';
 
         $params = [
             ['type' => 'i', 'value' => $invoice_id]
         ];
 
-        $total = $this->db_utility->execute_query($query, $params, 'array');
-        
+        $total = $this->db_utility->execute_query($query, $params, 'array')[0];
+
         $query = 'UPDATE invoices
         SET net_value = ?
         WHERE id = ?';
 
         $params = [
-            ['type' => 'i', 'value' => $total],
+            ['type' => 'd', 'value' => $total == null ? 0 : $total],
             ['type' => 'i', 'value' => $invoice_id],
         ];
 
         return $this->db_utility->execute_query($query, $params, false);
     }
 
-    public function update_stock_from_invoiced_item_id($id) {
+    public function update_stock_from_invoiced_item_id($id)
+    {
         $query = '';
     }
 
-    public function get_invoice_id_titles() {
+    public function get_invoice_id_titles()
+    {
         $query = 'SELECT id, title AS replacement FROM invoices ORDER BY replacement ASC';
         return $this->db_utility->execute_query($query, null, 'assoc-array');
     }
 
-    public function get_delivery_date_from_id($invoice_id) {
+    public function get_delivery_date_from_id($invoice_id)
+    {
         $query = 'SELECT delivery_date FROM invoices WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $invoice_id]
@@ -1331,7 +1379,8 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array')['delivery_date'];
     }
 
-    public function get_invoices_due_today_basic() {
+    public function get_invoices_due_today_basic()
+    {
         $query = 'SELECT i.id, c.account_name, i.printed, i.payment_status FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.delivery_date = (CURDATE())';
         return $this->db_utility->execute_query($query, null, 'assoc-array');
     }
@@ -1368,7 +1417,8 @@ class InvoiceDatabase
         return $invoice_data;
     }
 
-    public function get_warehouse_id($invoice_id) {
+    public function get_warehouse_id($invoice_id)
+    {
         $query = 'SELECT warehouse_id FROM invoices WHERE id = ?';
 
         $params = [
@@ -1379,7 +1429,8 @@ class InvoiceDatabase
         return $warehouse_id;
     }
 
-    public function get_next_invoice_id($table_name) {
+    public function get_next_invoice_id($table_name)
+    {
         //$query = 'SET information_schema_stats_expiry = 0';
         // $this->db_utility->execute_query($query, null, false);
 
@@ -1388,7 +1439,8 @@ class InvoiceDatabase
         return $next_id;
     }
 
-    public function get_invoiced_items_from_id($invoice_id) {
+    public function get_invoiced_items_from_id($invoice_id)
+    {
         $query = 'SELECT 
             ii.id AS id,
             it.item_name AS name,
@@ -1411,11 +1463,12 @@ class InvoiceDatabase
         return $data;
     }
 
-    public function get_basic_invoiced_item_from_ids($invoice_ids) {
+    public function get_basic_invoiced_item_from_ids($invoice_ids)
+    {
         $invoice_ids_array = explode(',', $invoice_ids);
-    
+
         $placeholders = rtrim(str_repeat('?, ', count($invoice_ids_array)), ', ');
-    
+
         $query = 'SELECT 
                     ii.quantity AS quantity, 
                     it.item_name AS name,
@@ -1428,12 +1481,12 @@ class InvoiceDatabase
                     invoices AS inv ON ii.invoice_id = inv.id 
                 WHERE
                     inv.id IN (' . $placeholders . ')';
-    
+
         $params = [];
         foreach ($invoice_ids_array as $id) {
             $params[] = ['type' => 's', 'value' => $id];
         }
-    
+
         $data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $data;
     }
@@ -1532,15 +1585,12 @@ class InvoiceDatabase
 
     public function get_debtor_data($startDay, $endDay)
     {
-        if ($endDay == "null") 
-        {
+        if ($endDay == "null") {
             $query = 'SELECT i.title, c.account_name, SUM(i.total) AS total_amount, i.created_at FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.created_at <= curdate() - INTERVAL ? DAY AND i.payment_status = "No" GROUP BY i.title, c.account_name, i.created_at';
             $params = [
                 ['type' => 's', 'value' => $startDay]
             ];
-        }
-        else
-        {
+        } else {
             $query = 'SELECT i.title, c.account_name, SUM(i.total) AS total_amount, i.created_at FROM invoices AS i INNER JOIN customers AS c ON i.customer_id = c.id WHERE i.created_at >= curdate() - INTERVAL ? DAY AND i.created_at < (CURDATE()) - INTERVAL ? DAY AND i.payment_status = "No" GROUP BY i.title, c.account_name, i.created_at';
             $params = [
                 ['type' => 's', 'value' => $endDay],
@@ -1552,15 +1602,12 @@ class InvoiceDatabase
     }
     public function get_creditor_data($startDay, $endDay)
     {
-        if ($endDay == "null") 
-        {
+        if ($endDay == "null") {
             $query = 'SELECT i.reference, s.account_name, SUM(i.total) AS total_amount, i.created_at FROM supplier_invoices AS i INNER JOIN suppliers AS s ON i.supplier_id = s.id WHERE i.created_at <= curdate() - INTERVAL ? DAY AND i.payment_status = "No" GROUP BY i.reference, s.account_name, i.created_at';
             $params = [
                 ['type' => 's', 'value' => $startDay]
             ];
-        }
-        else
-        {
+        } else {
             $query = 'SELECT i.reference, s.account_name, SUM(i.total) AS total_amount, i.created_at FROM supplier_invoices AS i INNER JOIN suppliers AS s ON i.supplier_id = s.id WHERE i.created_at >= curdate() - INTERVAL ? DAY AND i.created_at < (CURDATE()) - INTERVAL ? DAY AND i.payment_status = "No" GROUP BY i.reference, s.account_name, i.created_at';
             $params = [
                 ['type' => 's', 'value' => $endDay],
@@ -1578,7 +1625,8 @@ class InvoiceDatabase
         return $invoice_count;
     }
 
-    public function get_total_invoices_per_month($monthStart, $monthEnd, $year) {
+    public function get_total_invoices_per_month($monthStart, $monthEnd, $year)
+    {
         $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
         $params = [
             ['type' => 'i', 'value' => $year],
@@ -1588,7 +1636,8 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_total_invoices_per_day($dayStart, $dayEnd, $month, $year) {
+    public function get_total_invoices_per_day($dayStart, $dayEnd, $month, $year)
+    {
         $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
         $params = [
             ['type' => 'i', 'value' => $month],
@@ -1599,7 +1648,8 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_total_invoice_value_per_month($monthStart, $monthEnd, $year) {
+    public function get_total_invoice_value_per_month($monthStart, $monthEnd, $year)
+    {
         $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, SUM(total) AS total FROM invoices WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
         $params = [
             ['type' => 'i', 'value' => $year],
@@ -1609,7 +1659,8 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_total_invoice_value_per_day($dayStart, $dayEnd, $month, $year) {
+    public function get_total_invoice_value_per_day($dayStart, $dayEnd, $month, $year)
+    {
         $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, SUM(total) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
         $params = [
             ['type' => 'i', 'value' => $month],
@@ -1620,7 +1671,8 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_average_invoice_value_per_month($monthStart, $monthEnd, $year) {
+    public function get_average_invoice_value_per_month($monthStart, $monthEnd, $year)
+    {
         $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, SUM(total) / COUNT(*) AS total FROM invoices WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
         $params = [
             ['type' => 'i', 'value' => $year],
@@ -1630,7 +1682,8 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_vat_data($startDate, $endDate) {
+    public function get_vat_data($startDate, $endDate)
+    {
         $query = 'SELECT 
         COALESCE(SUM(output_total), 0) AS output_total, 
         COALESCE(SUM(output_vat), 0) AS output_vat, 
@@ -1669,7 +1722,8 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_average_invoice_value_per_day($dayStart, $dayEnd, $month, $year) {
+    public function get_average_invoice_value_per_day($dayStart, $dayEnd, $month, $year)
+    {
         $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, SUM(total) / COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
         $params = [
             ['type' => 'i', 'value' => $month],
@@ -1680,7 +1734,8 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_top_selling_item_per_month($monthStart, $monthEnd, $year) {
+    public function get_top_selling_item_per_month($monthStart, $monthEnd, $year)
+    {
         $query = 'SELECT i.item_name AS dateKey, SUM(ii.quantity) AS total FROM invoiced_items AS ii JOIN items i ON ii.item_id = i.id WHERE EXTRACT(YEAR FROM ii.created_at) = ? AND EXTRACT(MONTH FROM ii.created_at) BETWEEN ? AND ? GROUP BY i.id ORDER BY total DESC LIMIT 5';
         $params = [
             ['type' => 'i', 'value' => $year],
@@ -1690,7 +1745,8 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_top_selling_item_per_day($dayStart, $dayEnd, $month, $year) {
+    public function get_top_selling_item_per_day($dayStart, $dayEnd, $month, $year)
+    {
         $query = 'SELECT i.item_name AS dateKey, SUM(ii.quantity) AS total FROM invoiced_items AS ii JOIN items i ON ii.item_id = i.id WHERE EXTRACT(MONTH FROM ii.created_at) = ? AND EXTRACT(YEAR FROM ii.created_at) = ? AND DAY(ii.created_at) BETWEEN ? AND ? GROUP BY i.id ORDER BY total DESC LIMIT 5';
         $params = [
             ['type' => 'i', 'value' => $month],

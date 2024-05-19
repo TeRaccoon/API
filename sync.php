@@ -6,9 +6,9 @@ require_once 'dbh.php';
 require_once 'database_functions.php';
 require_once 'database_utility.php';
 
-function sync_invoice_value($id, $invoice_database)
-{
-    if (!$invoice_database->update_invoice_value_from_invoiced_item_id($id)) {
+function sync_invoice_value($invoice_id, $invoice_database)
+{   
+    if (!$invoice_database->update_invoice_value_from_invoiced_item_id($invoice_id)) {
         return array('success' => false, 'message' => 'There was an issue updating the invoice value!');
     }
 
@@ -30,6 +30,7 @@ function sync_invoiced_items_insert($database_utility, $id, $item_id, $quantity)
     $invoice_database = new InvoiceDatabase($database_utility);
     $all_database = new AllDatabases($database_utility);
 
+    $invoice_id = $invoice_database->get_invoice_id_from_invoiced_item_id($id)[0];
     $response[] = check_stock_availability($all_database, $item_id, $quantity);
     if (!in_array(true, $response)) {
         return $response;
@@ -39,7 +40,7 @@ function sync_invoiced_items_insert($database_utility, $id, $item_id, $quantity)
     $stock_data = is_array($stock_data) ? $stock_data : [$stock_data];
 
     $response[] = update_stock_and_keys_from_stock_data($all_database, $stock_data, $quantity, $id);
-    $response[] = sync_invoice_value($id, $invoice_database);
+    $response[] = sync_invoice_value($invoice_id, $invoice_database);
 
     return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!')
         :
@@ -51,6 +52,7 @@ function sync_invoiced_items_append($database_utility, $id, $item_id, $quantity)
     $invoice_database = new InvoiceDatabase($database_utility);
     $all_database = new AllDatabases($database_utility);
 
+    $invoice_id = $invoice_database->get_invoice_id_from_invoiced_item_id($id)[0];
     $response[] = check_stock_availability($all_database, $item_id, $quantity);
     if (!in_array(true, $response)) {
         return $response;
@@ -62,20 +64,22 @@ function sync_invoiced_items_append($database_utility, $id, $item_id, $quantity)
     $stock_data = is_array($stock_data) ? $stock_data : [$stock_data];
 
     $response[] = update_stock_and_keys_from_stock_data($all_database, $stock_data, $quantity, $id);
-    $response[] = sync_invoice_value($id, $invoice_database);
+    $response[] = sync_invoice_value($invoice_id, $invoice_database);
 
     return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!')
         :
         array('success' => true, 'message' => 'Invoiced item added successfully!');
 }
 
-function sync_invoiced_items_delete($database_utility, $id)
+function sync_invoiced_items_delete($database_utility, $id, $query_string)
 {
     $invoice_database = new InvoiceDatabase($database_utility);
     $all_database = new AllDatabases($database_utility);
 
+    $invoice_id = $invoice_database->get_invoice_id_from_invoiced_item_id($id)[0];
     $response[] = revert_stock_key($all_database, $id);
-    $response[] = sync_invoice_value($id, $invoice_database);
+    $response[] = $database_utility->execute_query($query_string, null, false);
+    $response[] = sync_invoice_value($invoice_id, $invoice_database);
 
     return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!')
         :
