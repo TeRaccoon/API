@@ -222,6 +222,10 @@ function run_query() {
             $results = $customer_database->get_id_names();
             break;
 
+        case "customers_id_name_code":
+            $results = $customer_database->get_id_names_codes();
+            break;
+
         case "page_section_id_name":
             $results = $all_databases->get_page_section_id_names();
             break;
