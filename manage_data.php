@@ -185,6 +185,10 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
             $response = sync_invoiced_items($database_utility, $id[0], $action, $data, $query_string);
             break;
 
+        case 'customer_payments':
+            $response = sync_customer_payments($database_utility, $id[0], $action, $data, $query_string);
+            break;
+
         default:
         $response = array('success' => true, 'message' => 'Record actioned successfully');
             break;
@@ -202,18 +206,29 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
 }
 
 function sync_invoiced_items($database_utility, $id, $action, $data, $query_string) {
+    $invoiced_items_sync = new SyncInvoicedItems($database_utility, new InvoiceDatabase($database_utility), new AllDatabases($database_utility));
     switch ($action) {
         case "add":
-            return sync_invoiced_items_insert($database_utility, $id, $data['item_id'], $data['quantity']);
+            return $invoiced_items_sync->sync_invoiced_items_insert($id, $data['item_id'], $data['quantity']);
 
         case "append":
-            return sync_invoiced_items_append($database_utility, $id, $data['item_id'], $data['quantity']);
+            return $invoiced_items_sync->sync_invoiced_items_append($id, $data['item_id'], $data['quantity']);
 
         case "delete":
-            return sync_invoiced_items_delete($database_utility, $id, $query_string);
+            return $invoiced_items_sync->sync_invoiced_items_delete($id, $query_string);
         
         default:
             return array('success' => true, 'message' => 'Record actioned successfully');
+    }
+}
+
+function sync_customer_payments($database_utility, $id, $action, $data, $query_string)
+{
+    $customer_payments_sync = new SyncCustomerPayments($database_utility, new InvoiceDatabase($database_utility), new AllDatabases($database_utility), new CustomerPaymentsDatabase($database_utility), new CustomerDatabase($database_utility));
+    switch ($action)
+    {
+        case "add":
+            return $customer_payments_sync->sync_customer_payments_insert($id, $data['amount'], $data['invoice_id'], $data['status']);
     }
 }
 

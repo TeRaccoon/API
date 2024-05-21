@@ -579,6 +579,35 @@ class CustomerDatabase
         $this->db_utility = $db_utility;
     }
 
+    function get_outstanding_balance($customer_id)
+    {
+        $query = 'SELECT outstanding_balance FROM customers WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $customer_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'array');
+    }
+
+    public function update_outstanding_balance($balance, $id)
+    {
+        $query = 'UPDATE customers SET outstanding_balance = ? WHERE id = ?';
+        $params = [
+            ['type' => 'd', 'value' => $balance],
+            ['type' => 'i', 'value' => $id]
+        ];
+        return $this->db_utility->execute_query($query, $params, false);
+    }
+
+    public function sync_outstanding_balance($id)
+    {
+        $query = 'UPDATE customers SET outstanding_balance = (SELECT SUM(total) FROM invoices WHERE customer_id = ?) WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id],
+            ['type' => 'i', 'value' => $id]
+        ];
+        return $this->db_utility->execute_query($query, $params, false);
+    }
+
     function get_customer_password($id)
     {
         $query = 'SELECT password FROM customers WHERE id = ?';
@@ -732,6 +761,13 @@ class CustomerDatabase
     function get_id_names()
     {
         $query = 'SELECT id, account_name AS replacement FROM customers ORDER BY replacement ASC';
+        $data = $this->db_utility->execute_query($query, null, 'assoc-array');
+        return $data;
+    }
+
+    function get_id_names_codes()
+    {
+        $query = 'SELECT id, CONCAT(account_name, " - ", account_number) AS replacement FROM customers ORDER BY replacement ASC';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
@@ -1051,6 +1087,18 @@ class CustomerPaymentsDatabase
         $payment_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $payment_data;
     }
+    public function create_excess_payment($amount, $reference, $invoice_id, $status)
+    {
+        $query = 'INSERT INTO customer_payments (`amount`, `reference`, `invoice_id`, `type`, `status`) VALUES (?, ?, ?, `Credit`, ?)';
+        $params = [
+            ['type' => 'i', 'value' => $amount],
+            ['type' => 's', 'value' => $reference],
+            ['type' => 'd', 'value' => $invoice_id],
+            ['type' => 's', 'value' => $status]
+        ];
+
+        return $this->db_utility->execute_query($query, $params, false);
+    }
 }
 
 class LedgerDatabase
@@ -1306,6 +1354,8 @@ class InvoiceDatabase
     {
         $this->db_utility = $db_utility;
     }
+
+
 
     public function get_invoice_id_from_invoiced_item_id($invoiced_item_id)
     {
@@ -1801,7 +1851,7 @@ class InvoiceDatabase
         $customer_debt = $this->db_utility->execute_query($query, $params, 'assoc-array')['total'];
         return $customer_debt;
     }
-    public function set_invoice_payment($status, $invoice_id)
+    public function set_invoice_status($invoice_id, $status)
     {
         if ($status == 'Yes' || $status == 'No') {
             $query = 'UPDATE invoices SET payment_status = ? WHERE id = ?';
@@ -1809,7 +1859,26 @@ class InvoiceDatabase
                 ['type' => 's', 'value' => $status],
                 ['type' => 'i', 'value' => $invoice_id]
             ];
-            $this->db_utility->execute_query($query, $params, false);
+            return $this->db_utility->execute_query($query, $params, false);
         }
+    }
+
+    public function get_total($invoice_id)
+    {
+        $query = 'SELECT total FROM invoices WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $invoice_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'array');
+    }
+
+    public function update_outstanding_balance($new_balance, $invoice_id)
+    {
+        $query = 'UPDATE invoices SET outstanding_balance = ? WHERE id = ?';
+        $params = [
+            ['type' => 'd', 'value' => $new_balance],
+            ['type' => 'i', 'value' => $invoice_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, false);
     }
 }
