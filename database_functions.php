@@ -1395,18 +1395,26 @@ class InvoiceDatabase
             ['type' => 'i', 'value' => $invoice_id]
         ];
 
-        $total = $this->db_utility->execute_query($query, $params, 'array')[0];
+        $total = $this->db_utility->execute_query($query, $params, 'array');
+        if ($total != null && count($total) > 0) 
+        {
+            $total = $total[0];
 
-        $query = 'UPDATE invoices
-        SET net_value = ?
-        WHERE id = ?';
-
-        $params = [
-            ['type' => 'd', 'value' => $total == null ? 0 : $total],
-            ['type' => 'i', 'value' => $invoice_id],
-        ];
-
-        return $this->db_utility->execute_query($query, $params, false);
+            $query = 'UPDATE invoices
+            SET net_value = ?
+            WHERE id = ?';
+    
+            $params = [
+                ['type' => 'd', 'value' => $total == null ? 0 : $total],
+                ['type' => 'i', 'value' => $invoice_id],
+            ];
+    
+            return $this->db_utility->execute_query($query, $params, false);
+        }
+        else
+        {
+            return true;
+        }
     }
 
     public function update_stock_from_invoiced_item_id($id)
@@ -1481,8 +1489,8 @@ class InvoiceDatabase
 
     public function get_next_invoice_id($table_name)
     {
-        //$query = 'SET information_schema_stats_expiry = 0';
-        // $this->db_utility->execute_query($query, null, false);
+        $query = 'ANALYZE TABLE invoices';
+        $this->db_utility->execute_query($query, null, false);
 
         $query = 'SELECT AUTO_INCREMENT AS next_id FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $table_name . '"';
         $next_id = $this->db_utility->execute_query($query, null, 'assoc-array')['next_id'];
@@ -1851,6 +1859,18 @@ class InvoiceDatabase
         $customer_debt = $this->db_utility->execute_query($query, $params, 'assoc-array')['total'];
         return $customer_debt;
     }
+    public function set_invoice_payment_status($invoice_id, $status)
+    {
+        if ($status == 'Yes' || $status == 'No') {
+            $query = 'UPDATE invoices SET payment_status = ? WHERE id = ?';
+            $params = [
+                ['type' => 's', 'value' => $status],
+                ['type' => 'i', 'value' => $invoice_id]
+            ];
+            return $this->db_utility->execute_query($query, $params, false);
+        }
+    }
+
     public function set_invoice_status($invoice_id, $status)
     {
         if ($status == 'Yes' || $status == 'No') {
