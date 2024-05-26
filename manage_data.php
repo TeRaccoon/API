@@ -229,6 +229,9 @@ function sync_customer_payments($database_utility, $id, $action, $data, $query_s
     {
         case "add":
             return $customer_payments_sync->sync_customer_payments_insert($id, $data['amount'], $data['invoice_id'], $data['status']);
+
+        case "append":
+            return $customer_payments_sync->sync_customer_payments_append($id, $data['amount'], $data['invoice_id'], $data['status']);
     }
 }
 

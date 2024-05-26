@@ -585,7 +585,7 @@ class CustomerDatabase
         $params = [
             ['type' => 'i', 'value' => $customer_id]
         ];
-        return $this->db_utility->execute_query($query, $params, 'array');
+        return $this->db_utility->execute_query($query, $params, 'array')[0];
     }
 
     public function update_outstanding_balance($balance, $id)
@@ -1080,21 +1080,42 @@ class CustomerPaymentsDatabase
     }
     public function get_payment_data($payment_id)
     {
-        $query = 'SELECT customer_id, amount, invoice_id, status, type, date FROM customer_payments WHERE id = ?';
+        $query = 'SELECT * FROM customer_payments WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $payment_id]
         ];
         $payment_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $payment_data;
     }
-    public function create_excess_payment($amount, $reference, $invoice_id, $status)
+    public function create_excess_payment($amount, $reference, $invoice_id, $status, $payment_id)
     {
-        $query = 'INSERT INTO customer_payments (`amount`, `reference`, `invoice_id`, `type`, `status`) VALUES (?, ?, ?, `Credit`, ?)';
+        $query = 'INSERT INTO customer_payments (`amount`, `reference`, `invoice_id`, `type`, `status`, `linked_payment_id`) VALUES (?, ?, ?, "Credit", ?, ?)';
         $params = [
-            ['type' => 'i', 'value' => $amount],
+            ['type' => 'd', 'value' => $amount],
             ['type' => 's', 'value' => $reference],
-            ['type' => 'd', 'value' => $invoice_id],
-            ['type' => 's', 'value' => $status]
+            ['type' => 'i', 'value' => $invoice_id],
+            ['type' => 's', 'value' => $status],
+            ['type' => 'i', 'value' => $payment_id]
+        ];
+
+        return $this->db_utility->execute_query($query, $params, false);
+    }
+
+    public function get_excess_payment($id)
+    {
+        $query = 'SELECT * FROM customer_payments WHERE linked_payment_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id]
+        ];
+
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function remove_linked_payment($payment_id)
+    {
+        $query = 'DELETE FROM customer_payments WHERE linked_payment_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $payment_id]
         ];
 
         return $this->db_utility->execute_query($query, $params, false);
