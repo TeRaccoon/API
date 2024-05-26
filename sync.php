@@ -158,7 +158,7 @@ class SyncCustomerPayments
         $response[] = $this->invoice_database->update_outstanding_balance($new_invoice_outstanding_balance < 0 ? 0 : $new_invoice_outstanding_balance, $invoice_id);
         if ($new_invoice_outstanding_balance == 0) 
         {
-            $response[] = $this->invoice_database->set_invoice_status($invoice_id, 'Yes');
+            $response[] = $this->invoice_database->set_invoice_payment_status($invoice_id, 'Yes');
         }
         else if ($new_invoice_outstanding_balance < 0)
         {
