@@ -190,7 +190,7 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
             break;
 
         default:
-        $response = array('success' => true, 'message' => 'Record actioned successfully');
+        $response = array('success' => true, 'message' => 'Record actioned successfully', 'id' => $id[0]);
             break;
     }
 
@@ -218,7 +218,7 @@ function sync_invoiced_items($database_utility, $id, $action, $data, $query_stri
             return $invoiced_items_sync->sync_invoiced_items_delete($id, $query_string);
         
         default:
-            return array('success' => true, 'message' => 'Record actioned successfully');
+            return array('success' => true, 'message' => 'Record actioned successfully', 'id' => $id[0]);
     }
 }
 
