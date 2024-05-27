@@ -356,21 +356,21 @@ function get_delivery_info($all_databases, $invoice_database, $customer_database
     $warehouse_id = $invoice_database->get_warehouse_id($invoice_id);
     $warehouse_name = $all_databases->get_warehouse_name_from_id($warehouse_id);
 
-    $customer_delivery_info = $customer_database->get_customer_delivery_info($customer_id);
-    $customer_postcode = $all_databases->get_customer_postcode_from_id($customer_id);
+    $address_data = $invoice_database->get_addresses($invoice_id);
+    $customer_delivery_info = [$address_data['delivery_address_one'], $address_data['delivery_address_two'], $address_data['delivery_address_three'], $address_data['delivery_address_four'], $address_data['delivery_postcode']];
 
     $delivery_date = $invoice_database->get_delivery_date_from_id($invoice_id);
 
     $warehouse_postcode = $all_databases->get_postcode_from_warehouse_id($warehouse_id);
 
-    $customer_coordinates = $all_databases->get_coordinates_from_postcode($customer_postcode);
+    $customer_coordinates = $all_databases->get_coordinates_from_postcode($address_data['delivery_postcode']);
     $warehouse_coordinates = $all_databases->get_coordinates_from_postcode($warehouse_postcode);
 
     return array(
         'invoice_id' => $invoice_id,
         'delivery_info' => $customer_delivery_info,
         'delivery_date' => $delivery_date,
-        'customer_postcode' => $customer_postcode,
+        'customer_postcode' => $address_data['delivery_postcode'],
         'customer_coordinates' => $customer_coordinates,
         'warehouse_postcode' => $warehouse_postcode,
         'warehouse_name' => $warehouse_name,

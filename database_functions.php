@@ -1376,7 +1376,23 @@ class InvoiceDatabase
         $this->db_utility = $db_utility;
     }
 
+    public function get_invoice($id)
+    {
+        $query = 'SELECT * FROM invoices WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
 
+    public function get_addresses($id)
+    {
+        $query = 'SELECT a.* FROM customer_address AS a INNER JOIN invoices AS i ON i.address_id = a.id WHERE i.id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
 
     public function get_invoice_id_from_invoiced_item_id($invoiced_item_id)
     {
