@@ -330,6 +330,10 @@ function run_query() {
             $results = $items_database->sub_categories();
             break;
 
+        case 'customer-addresses':
+            $results = $customer_database->get_addresses_by_address_id($filter);
+            break;
+
         case 'customer-addresses-by-id':
             $results = $customer_database->get_address_from_customer_id($filter);
             break;
@@ -362,8 +366,7 @@ function get_delivery_info($all_databases, $invoice_database, $customer_database
     $delivery_date = $invoice_database->get_delivery_date_from_id($invoice_id);
 
     $warehouse_postcode = $all_databases->get_postcode_from_warehouse_id($warehouse_id);
-
-    $customer_coordinates = $all_databases->get_coordinates_from_postcode($address_data['delivery_postcode']);
+    $customer_coordinates = $all_databases->get_coordinates_from_postcode(str_replace(' ', '', $address_data['delivery_postcode']));
     $warehouse_coordinates = $all_databases->get_coordinates_from_postcode($warehouse_postcode);
 
     return array(
