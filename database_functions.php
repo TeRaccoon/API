@@ -313,14 +313,14 @@ class AllDatabases
 
     public function get_customer_address_id_address()
     {
-        $query = 'SELECT ca.id, CONCAT_WS(": ", customers.account_name, CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode)) AS replacement FROM customer_address AS ca INNER JOIN customers ON ca.customer_id = customers.id';
+        $query = 'SELECT ca.id, CONCAT_WS(": ", COALESCE(customers.account_name, "N/A"), CONCAT_WS(", ", delivery_address_one, delivery_address_two, delivery_address_three, delivery_address_four, delivery_postcode)) AS replacement FROM customer_address AS ca LEFT JOIN customers ON ca.customer_id = customers.id';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
 
     public function get_customer_billing_address_id_address()
     {
-        $query = 'SELECT ca.id, CONCAT_WS(": ", customers.account_name, CONCAT_WS(", ", invoice_address_one, invoice_address_two, invoice_address_three, invoice_address_four, invoice_postcode)) AS replacement FROM customer_address AS ca INNER JOIN customers ON ca.customer_id = customers.id';
+        $query = 'SELECT ca.id, CONCAT_WS(": ", COALESCE(customers.account_name, "N/A"), CONCAT_WS(", ", invoice_address_one, invoice_address_two, invoice_address_three, invoice_address_four, invoice_postcode)) AS replacement FROM customer_address AS ca LEFT JOIN customers ON ca.customer_id = customers.id';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
@@ -677,6 +677,26 @@ class CustomerDatabase
         $query = 'SELECT title, status, net_value, VAT, total, payment_status FROM invoices WHERE customer_id = ?';
         $params = [
             ['type' => 'i', 'value' => $user_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    function get_addresses_by_address_id($address_id)
+    {
+        $query = 'SELECT id,
+        invoice_address_one, 
+        invoice_address_two, 
+        invoice_address_three,
+        invoice_address_four,
+        invoice_postcode, 
+        delivery_address_one, 
+        delivery_address_two, 
+        delivery_address_three, 
+        delivery_address_four, 
+        delivery_postcode FROM customer_address WHERE id = ?';
+
+        $params = [
+            ['type' => 'i', 'value' => $address_id]
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
