@@ -23,7 +23,7 @@ class SyncInvoicedItems
 
     function sync_invoice_value($invoice_id)
     {
-        if (!$this->invoice_database->update_invoice_value_from_invoiced_item_id($invoice_id)) {
+        if (!$this->invoice_database->update_invoice_value($invoice_id)) {
             return array('success' => false, 'message' => 'There was an issue updating the invoice value!');
         }
 
@@ -43,9 +43,9 @@ class SyncInvoicedItems
     function sync_invoiced_items_insert($id, $item_id, $quantity)
     {
         $invoice_id = $this->invoice_database->get_invoice_id_from_invoiced_item_id($id)[0];
-        $response[] = $this->check_stock_availability($item_id, $quantity);
-        if (!in_array(true, $response)) {
-            return $response;
+        $in_stock = $this->check_stock_availability($item_id, $quantity);
+        if ($in_stock !== true) {
+            return $in_stock;
         }
 
         $stock_data = $this->all_database->get_stock_data_from_item_id($item_id);
@@ -56,7 +56,7 @@ class SyncInvoicedItems
 
         $response[] = $this->customer_database->sync_outstanding_balance($id);
 
-        return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!')
+        return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!', 'data' => $response)
             :
             array('success' => true, 'message' => 'Invoiced item added successfully!');
     }
@@ -64,9 +64,9 @@ class SyncInvoicedItems
     function sync_invoiced_items_append($id, $item_id, $quantity)
     {
         $invoice_id = $this->invoice_database->get_invoice_id_from_invoiced_item_id($id)[0];
-        $response[] = $this->check_stock_availability( $item_id, $quantity);
-        if (!in_array(true, $response)) {
-            return $response;
+        $in_stock = $this->check_stock_availability($item_id, $quantity);
+        if ($in_stock !== true) {
+            return $in_stock;
         }
 
         $response[] = $this->revert_stock_key($id);
@@ -189,9 +189,7 @@ class SyncCustomerPayments
         $excess = $this->customer_payments_database->get_excess_payment($id)['amount'];
 
         $response[] = $this->invoice_database->update_outstanding_balance($invoice_outstanding_balance + $old_payment, $invoice_id);
-        $response[] = $this->customer_database->update_outstanding_balance($customer_outstanding_balance + $old_payment + $excess, $customer_id);
-
-        echo "New outstanding balance: " . $customer_outstanding_balance + $old_payment + $excess;
+        $response[] = $this->customer_database->update_outstanding_balance($customer_outstanding_balance + $old_payment - $excess, $customer_id);
 
         $response[] = $this->customer_payments_database->remove_linked_payment($id);
 
