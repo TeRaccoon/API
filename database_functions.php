@@ -579,6 +579,15 @@ class CustomerDatabase
         $this->db_utility = $db_utility;
     }
 
+    function get_customer($id)
+    {
+        $query = 'SELECT * FROM customers WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
     function get_outstanding_balance($customer_id)
     {
         $query = 'SELECT outstanding_balance FROM customers WHERE id = ?';
@@ -674,7 +683,7 @@ class CustomerDatabase
 
     function get_order_history($user_id)
     {
-        $query = 'SELECT title, status, net_value, VAT, total, payment_status FROM invoices WHERE customer_id = ?';
+        $query = 'SELECT title, status, gross_value, VAT, total, payment_status FROM invoices WHERE customer_id = ?';
         $params = [
             ['type' => 'i', 'value' => $user_id]
         ];
@@ -752,11 +761,11 @@ class CustomerDatabase
         $discount = $this->db_utility->execute_query($query, $params, 'assoc-array')['discount'];
         return $discount;
     }
-    function set_invoice_values($net_value, $vat, $total, $id)
+    function set_invoice_values($gross_value, $vat, $total, $id)
     {
-        $query = 'UPDATE invoices SET net_value = ?, VAT = ?, total = ? WHERE id = ?';
+        $query = 'UPDATE invoices SET gross_value = ?, VAT = ?, total = ? WHERE id = ?';
         $params = [
-            ['type' => 'd', 'value' => $net_value],
+            ['type' => 'd', 'value' => $gross_value],
             ['type' => 'd', 'value' => $vat],
             ['type' => 'd', 'value' => $total],
             ['type' => 'i', 'value' => $id]
@@ -1423,7 +1432,7 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'array');
     }
 
-    public function update_invoice_value_from_invoiced_item_id($invoice_id)
+    public function update_invoice_value($invoice_id)
     {
         $query = 'SELECT
         SUM(
@@ -1434,7 +1443,14 @@ class InvoiceDatabase
             END *
             (1 - invoiced_items.discount / 100) *
             (1 - customers.discount / 100)
-        ) AS total
+        ) AS net,
+        SUM(
+            invoiced_items.quantity *
+            CASE
+                WHEN customers.customer_type = "Retail" THEN items.retail_price
+                WHEN customers.customer_type = "Wholesale" THEN items.wholesale_price
+            END
+        ) AS gross
     FROM
         invoiced_items
     JOIN
@@ -1444,34 +1460,31 @@ class InvoiceDatabase
     JOIN
         customers ON invoices.customer_id = customers.id
     WHERE
-        invoices.id = ?
-    GROUP BY
-        invoices.id';
+        invoices.id = ?';
+    
 
         $params = [
             ['type' => 'i', 'value' => $invoice_id]
         ];
 
-        $total = $this->db_utility->execute_query($query, $params, 'array');
-        if ($total != null && count($total) > 0) 
-        {
-            $total = $total[0];
+        $totals = $this->db_utility->execute_query($query, $params, 'assoc-array');
+        $VAT = $totals['net'] * 0.2;
+        $net = $totals['net'] + $VAT;
 
-            $query = 'UPDATE invoices
-            SET net_value = ?
-            WHERE id = ?';
-    
-            $params = [
-                ['type' => 'd', 'value' => $total == null ? 0 : $total],
-                ['type' => 'i', 'value' => $invoice_id],
-            ];
-    
-            return $this->db_utility->execute_query($query, $params, false);
-        }
-        else
-        {
-            return true;
-        }
+        $query = 'UPDATE invoices
+        SET gross_value = ?,
+        VAT = ?,
+        total = ?
+        WHERE id = ?';
+
+        $params = [
+            ['type' => 'd', 'value' => $totals['gross'] ?? 0],
+            ['type' => 'd', 'value' => $VAT ?? 0],
+            ['type' => 'd', 'value' => $net ?? 0],
+            ['type' => 'i', 'value' => $invoice_id],
+        ];
+
+        return $this->db_utility->execute_query($query, $params, false);
     }
 
     public function update_stock_from_invoiced_item_id($id)
@@ -1504,7 +1517,7 @@ class InvoiceDatabase
     {
         $query = 'SELECT
         invoices.title,
-        invoices.net_value,
+        invoices.gross_value,
         invoices.total,
         invoices.vat,
         invoices.delivery_date,
@@ -1517,7 +1530,8 @@ class InvoiceDatabase
         customers.address_line_2,
         customers.address_line_3,
         customers.address_line_4,
-        customers.postcode
+        customers.postcode,
+        customers.discount
       FROM
         invoices
         INNER JOIN customers ON invoices.customer_id = customers.id
@@ -1620,15 +1634,20 @@ class InvoiceDatabase
         $query = 'SELECT
         items.item_name,
         items.image_file_name AS file_name,
-        items.retail_price AS price,
+        CASE
+            WHEN customers.customer_type = "Retail" THEN items.retail_price
+            WHEN customers.customer_type = "Wholesale" THEN items.wholesale_price
+        END AS price,
         invoiced_items.quantity,
+        invoiced_items.discount,
         settings.vat_charge AS vat_charge
-        FROM
+    FROM
         invoices
-        INNER JOIN invoiced_items ON invoices.id = invoiced_items.invoice_id
-        INNER JOIN items ON invoiced_items.item_id = items.id
-        INNER JOIN settings
-        WHERE
+    INNER JOIN invoiced_items ON invoices.id = invoiced_items.invoice_id
+    INNER JOIN items ON invoiced_items.item_id = items.id
+    INNER JOIN settings ON settings.id = 1
+    INNER JOIN customers ON invoices.customer_id = customers.id
+    WHERE
         invoices.id = ?';
 
         $params = [
@@ -1899,7 +1918,7 @@ class InvoiceDatabase
     }
     public function get_invoice_price_data($invoice_id)
     {
-        $query = 'SELECT net_value, VAT, total FROM invoices WHERE id = ?';
+        $query = 'SELECT gross_value, VAT, total FROM invoices WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $invoice_id]
         ];
