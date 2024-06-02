@@ -362,6 +362,7 @@ function get_delivery_info($all_databases, $invoice_database, $customer_database
 
     $address_data = $invoice_database->get_addresses($invoice_id);
     $customer_delivery_info = [$address_data['delivery_address_one'], $address_data['delivery_address_two'], $address_data['delivery_address_three'], $address_data['delivery_address_four'], $address_data['delivery_postcode']];
+    $account_name = $customer_database->get_customer($customer_id)['account_name'];
 
     $delivery_date = $invoice_database->get_delivery_date_from_id($invoice_id);
 
@@ -371,6 +372,7 @@ function get_delivery_info($all_databases, $invoice_database, $customer_database
 
     return array(
         'invoice_id' => $invoice_id,
+        'account_name' => $account_name,
         'delivery_info' => $customer_delivery_info,
         'delivery_date' => $delivery_date,
         'customer_postcode' => $address_data['delivery_postcode'],
@@ -548,9 +550,5 @@ function get_display_data($data, $table_name, $all_databases) {
         }
     }
 
-    // $display_data[$key][$item_key][$assoc_column] = ;
-
     return $display_data;
 }
-
-?>
