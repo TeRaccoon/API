@@ -196,12 +196,16 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
             break;
     }
 
-    if ($query_string != null && $response === true) {
+    if ($query_string != null && ($response === true || $response['success'] === true)) {
         $conn->query($query_string);
     }
 
-    if (!$conn->commit()) {
-        echo('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!' . 'other' . 'F_SQL-MD-0004' . $conn->error);
+    if ($response === true || $response['success'] === true)
+    {
+        if (!$conn->commit())
+        {
+            echo('ERROR: ' . $action . ' failed, synchronisation aborted! Please contact administrator!' . 'other' . 'F_SQL-MD-0004' . $conn->error);
+        }
     }
 
     return $response;
