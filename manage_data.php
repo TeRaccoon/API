@@ -178,8 +178,10 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
     if ($id == null) {
         $id = get_row_contents($conn, "SELECT auto_increment from information_schema.tables WHERE table_name = '" . $table_name . "' AND table_schema = DATABASE()")[0][0] - 1;
     }
-
+    
     $id = is_array($id) ? $id : [$id];
+
+    $response = true;
     switch ($table_name) {
         case 'invoiced_items':
             $response = sync_invoiced_items($database_utility, $id[0], $action, $data, $query_string);
@@ -194,7 +196,7 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
             break;
     }
 
-    if ($query_string != null) {
+    if ($query_string != null && $response === true) {
         $conn->query($query_string);
     }
 
