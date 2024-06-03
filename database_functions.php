@@ -68,6 +68,16 @@ class AllDatabases
         $this->db_utility = $db_utility;
     }
 
+    public function get_next_supplier_account_code($table_name)
+    {
+        $query = 'ANALYZE TABLE suppliers';
+        $this->db_utility->execute_query($query, null, false);
+
+        $query = 'SELECT AUTO_INCREMENT AS next_id FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $table_name . '"';
+        $next_id = $this->db_utility->execute_query($query, null, 'assoc-array')['next_id'];
+        return $next_id;
+    }
+
     public function get_vat_returns()
     {
         $query = 'SELECT * FROM vat_returns';
@@ -1568,26 +1578,56 @@ class InvoiceDatabase
         return $next_id;
     }
 
-    public function get_invoiced_items_from_id($invoice_id)
+    public function get_invoiced_items_from_id($invoice_id, $complex)
     {
-        $query = 'SELECT 
-            ii.id AS id,
-            it.item_name AS name,
-            it.image_file_name AS image_file_name,
-            ii.quantity AS quantity, 
-            settings.vat_charge AS vat,
-            ii.discount AS discount
-        FROM 
-            invoiced_items AS ii 
-        INNER JOIN items AS it ON ii.item_id = it.id 
-        INNER JOIN invoices AS inv ON ii.invoice_id = inv.id 
-        INNER JOIN settings
-        WHERE 
-            inv.id = ?';
+        if ($complex)
+        {
+            $query = 'SELECT 
+                ii.id AS id,
+                it.item_name AS name,
+                it.image_file_name AS image_file_name,
+                ii.quantity AS quantity, 
+                settings.vat_charge AS vat,
+                ii.discount AS discount,
+                CASE
+                    WHEN cs.customer_type = "Retail" THEN it.retail_price
+                    WHEN cs.customer_type = "Wholesale" THEN it.wholesale_price
+                END AS price,
+                CASE
+                    WHEN cs.customer_type = "Retail" THEN it.retail_price * ii.quantity
+                    WHEN cs.customer_type = "Wholesale" THEN it.wholesale_price * ii.quantity
+                END AS total
+            FROM 
+                invoiced_items AS ii 
+            INNER JOIN items AS it ON ii.item_id = it.id 
+            INNER JOIN invoices AS inv ON ii.invoice_id = inv.id
+            INNER JOIN customers AS cs ON inv.customer_id = cs.id
+            INNER JOIN settings
+            WHERE 
+                inv.id = ?';
+        }
+        else
+        {
+            $query = 'SELECT 
+                ii.id AS id,
+                it.item_name AS name,
+                it.image_file_name AS image_file_name,
+                ii.quantity AS quantity, 
+                settings.vat_charge AS vat,
+                ii.discount AS discount
+            FROM 
+                invoiced_items AS ii 
+                INNER JOIN items AS it ON ii.item_id = it.id 
+                INNER JOIN invoices AS inv ON ii.invoice_id = inv.id 
+                INNER JOIN settings
+            WHERE 
+                inv.id = ?';
+        }
 
         $params = [
             ['type' => 'i', 'value' => $invoice_id],
         ];
+
         $data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $data;
     }

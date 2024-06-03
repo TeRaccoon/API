@@ -138,6 +138,10 @@ function run_query() {
             $results = $invoice_database->get_next_invoice_id($filter);
             break;
 
+        case "next-supplier-account-code":
+            $results = $all_databases->get_next_supplier_account_code($filter);
+            break;
+
         case "account-balances":
             $results = $ledger_database->get_account_balance($_GET['start-date'], $_GET['end-date']);
             break;
@@ -283,7 +287,15 @@ function run_query() {
             break;
 
         case "invoiced-items":
-            $results = $invoice_database->get_invoiced_items_from_id($filter);
+            if ($filter) 
+            {
+                $id = $filter;
+            } else 
+            {
+                $id = urldecode($_GET['id']) ?? $filter;
+                $complex = urldecode($_GET['complex']);
+            }
+            $results = $invoice_database->get_invoiced_items_from_id($id, $complex ?? false);
             break;
 
         case "stocked-items-invoice":
