@@ -811,11 +811,29 @@ class CustomerDatabase
         return $data;
     }
 
-    public function get_customer_delivery_info($customer_id)
+    public function get_customer_delivery_info($invoice_id)
     {
-        $query = 'SELECT account_name, address_line_1, address_line_2, address_line_3, address_line_4, postcode FROM customers WHERE id = ?';
+        $query = 'SELECT 
+        da.delivery_address_one AS delivery_address_one,
+        da.delivery_address_two AS delivery_address_two,
+        da.delivery_address_three AS delivery_address_three,
+        da.delivery_address_four AS delivery_address_four,
+        da.delivery_postcode AS delivery_postcode,
+        ba.invoice_address_one AS billing_address_one,
+        ba.invoice_address_two AS billing_address_two,
+        ba.invoice_address_three AS billing_address_three,
+        ba.invoice_address_four AS billing_address_four,
+        ba.invoice_postcode AS billing_postcode
+    FROM 
+        invoices i
+    LEFT JOIN 
+        customer_address da ON i.address_id = da.id
+    LEFT JOIN 
+        customer_address ba ON i.billing_address_id = ba.id
+    WHERE 
+        i.id = ?';
         $params = [
-            ['type' => 'i', 'value' => $customer_id]
+            ['type' => 'i', 'value' => $invoice_id]
         ];
         $customer_address_info = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $customer_address_info;
@@ -1536,11 +1554,6 @@ class InvoiceDatabase
         customers.forename,
         customers.surname,
         customers.outstanding_balance,
-        customers.address_line_1,
-        customers.address_line_2,
-        customers.address_line_3,
-        customers.address_line_4,
-        customers.postcode,
         customers.discount
       FROM
         invoices

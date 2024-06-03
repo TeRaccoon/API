@@ -373,7 +373,7 @@ function get_delivery_info($all_databases, $invoice_database, $customer_database
     $warehouse_name = $all_databases->get_warehouse_name_from_id($warehouse_id);
 
     $address_data = $invoice_database->get_addresses($invoice_id);
-    $customer_delivery_info = [$address_data['delivery_address_one'], $address_data['delivery_address_two'], $address_data['delivery_address_three'], $address_data['delivery_address_four'], $address_data['delivery_postcode']];
+    $customer_delivery_info = $customer_database->get_customer_delivery_info($invoice_id);
     $account_name = $customer_database->get_customer($customer_id)['account_name'];
 
     $delivery_date = $invoice_database->get_delivery_date_from_id($invoice_id);
