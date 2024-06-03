@@ -56,6 +56,10 @@ function run_query() {
             $results = $all_databases->delete_vat_history_by_group_id($filter);
             break;
 
+        case "invoice":
+            $results = $invoice_database->get_invoice($filter);
+            break;
+
         case "total-invoices-per-month":
             $monthStart = urldecode($_GET['monthStart']);
             $monthEnd = urldecode($_GET['monthEnd']);
