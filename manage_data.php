@@ -196,11 +196,11 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
             break;
     }
 
-    if ($query_string != null && ($response === true || $response['success'] === true)) {
+    if ($query_string != null && ($response === true || is_array($response) && array_key_exists('success', $response) && $response['success'] === true)) {
         $conn->query($query_string);
     }
 
-    if ($response === true || $response['success'] === true)
+    if ($response === true || is_array($response) && array_key_exists('success', $response) && $response['success'] === true)
     {
         if (!$conn->commit())
         {
@@ -238,6 +238,9 @@ function sync_customer_payments($database_utility, $id, $action, $data, $query_s
 
         case "append":
             return $customer_payments_sync->sync_customer_payments_append($id, $data['amount'], $data['invoice_id'], $data['status']);
+
+        default:
+            return array('success' => true, 'message' => 'Record actioned successfully', 'id' => $id[0]);
     }
 }
 
