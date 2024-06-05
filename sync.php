@@ -21,13 +21,12 @@ class SyncInvoicedItems
         $this->customer_database = new CustomerDatabase($db_utility);
     }
 
-    function sync_invoice_value($invoice_id)
+    function sync_invoice_outstanding_balance($invoice_id, $invoice_total)
     {
-        if (!$this->invoice_database->update_invoice_value($invoice_id)) {
-            return array('success' => false, 'message' => 'There was an issue updating the invoice value!');
-        }
+        $total_payments = $this->invoice_database->get_total_payments($invoice_id)[0] ?? 0;
+        $outstanding_balance = $invoice_total - $total_payments;
 
-        return true;
+        return $this->invoice_database->set_outstanding_balance($invoice_id, $outstanding_balance);
     }
 
     function check_stock_availability($item_id, $quantity)
@@ -52,8 +51,13 @@ class SyncInvoicedItems
         $stock_data = is_array($stock_data) ? $stock_data : [$stock_data];
 
         $response[] = $this->update_stock_and_keys_from_stock_data($stock_data, $quantity, $id);
-        $response[] = $this->sync_invoice_value($invoice_id);
 
+        $invoice_totals = $this->invoice_database->calculate_invoice_totals($invoice_id);
+        $total = $invoice_totals['net'] * 1.2;
+
+        $response[] = $this->invoice_database->update_invoice_value($invoice_id, $invoice_totals['net'], $invoice_totals['gross']);
+
+        $response[] = $this->sync_invoice_outstanding_balance($invoice_id, $total);
         $response[] = $this->customer_database->sync_outstanding_balance($id);
 
         return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!', 'data' => $response)
@@ -75,8 +79,13 @@ class SyncInvoicedItems
         $stock_data = is_array($stock_data) ? $stock_data : [$stock_data];
 
         $response[] = $this->update_stock_and_keys_from_stock_data($stock_data, $quantity, $id);
-        $response[] = $this->sync_invoice_value($invoice_id);
+        
+        $invoice_totals = $this->invoice_database->calculate_invoice_totals($invoice_id);
+        $total = $invoice_totals['net'] * 1.2;
 
+        $response[] = $this->invoice_database->update_invoice_value($invoice_id, $invoice_totals['net'], $invoice_totals['gross']);
+
+        $response[] = $this->sync_invoice_outstanding_balance($invoice_id, $total);
         $response[] = $this->customer_database->sync_outstanding_balance($id);
 
         return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!')
@@ -89,8 +98,13 @@ class SyncInvoicedItems
         $invoice_id = $this->invoice_database->get_invoice_id_from_invoiced_item_id($id)[0];
         $response[] = $this->revert_stock_key($id);
         $response[] = $this->db_utility->execute_query($query_string, null, false);
-        $response[] = $this->sync_invoice_value($invoice_id);
 
+        $invoice_totals = $this->invoice_database->calculate_invoice_totals($invoice_id);
+        $total = $invoice_totals['net'] * 1.2;
+
+        $response[] = $this->invoice_database->update_invoice_value($invoice_id, $invoice_totals['net'], $invoice_totals['gross']);
+
+        $response[] = $this->sync_invoice_outstanding_balance($invoice_id, $total);
         $response[] = $this->customer_database->sync_outstanding_balance($id);
 
         return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!')

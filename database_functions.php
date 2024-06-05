@@ -1442,6 +1442,15 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
+    public function get_total_payments($id)
+    {
+        $query = 'SELECT SUM(amount) FROM customer_payments WHERE invoice_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'array');
+    }
+
     public function get_addresses($id)
     {
         $query = 'SELECT a.* FROM customer_address AS a INNER JOIN invoices AS i ON i.address_id = a.id WHERE i.id = ?';
@@ -1460,7 +1469,7 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'array');
     }
 
-    public function update_invoice_value($invoice_id)
+    public function calculate_invoice_totals($id)
     {
         $query = 'SELECT
         SUM(
@@ -1492,12 +1501,16 @@ class InvoiceDatabase
     
 
         $params = [
-            ['type' => 'i', 'value' => $invoice_id]
+            ['type' => 'i', 'value' => $id]
         ];
 
-        $totals = $this->db_utility->execute_query($query, $params, 'assoc-array');
-        $VAT = $totals['net'] * 0.2;
-        $net = $totals['net'] + $VAT;
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function update_invoice_value($invoice_id, $net_total, $gross_value)
+    {
+        $VAT = $net_total * 0.2;
+        $net = $net_total + $VAT;
 
         $query = 'UPDATE invoices
         SET gross_value = ?,
@@ -1506,12 +1519,22 @@ class InvoiceDatabase
         WHERE id = ?';
 
         $params = [
-            ['type' => 'd', 'value' => $totals['gross'] ?? 0],
+            ['type' => 'd', 'value' => $gross_value ?? 0],
             ['type' => 'd', 'value' => $VAT ?? 0],
             ['type' => 'd', 'value' => $net ?? 0],
             ['type' => 'i', 'value' => $invoice_id],
         ];
 
+        return $this->db_utility->execute_query($query, $params, false);
+    }
+
+    public function set_outstanding_balance($id, $outstanding_balance)
+    {
+        $query = 'UPDATE invoices SET outstanding_balance = ? WHERE id = ?';
+        $params = [
+            ['type' => 'd', 'value' => $outstanding_balance],
+            ['type' => 'i', 'value' => $id]
+        ];
         return $this->db_utility->execute_query($query, $params, false);
     }
 
