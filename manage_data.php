@@ -41,13 +41,13 @@ if (isset($data['action'])) {
             break;
 
         case 'append':
-            append($database, $database_utility, $user_database, $customer_database, $data);
-            $response = array('success' => true, 'message' => 'Record appended successfully');
+            $response = append($database, $database_utility, $user_database, $customer_database, $data);
+            // $response = array('success' => true, 'message' => 'Record appended successfully');
             break;
 
         case 'delete':
-            drop($database, $data);
-            $response = array('success' => true, 'message' => 'Record dropped successfully');
+            $response = drop($database, $data);
+            // $response = array('success' => true, 'message' => 'Record dropped successfully');
             break;
 
         case 'login':
@@ -117,7 +117,7 @@ function append($conn, $database_utility, $user_database, $customer_database, $d
 
     $conn->query($query);
 
-    synchronise($conn, $table_name, $data['id'], $query, $data);
+    return synchronise($conn, $table_name, $data['id'], $query, $data);
 }
 
 function append_user($user_database, $username, $data)
@@ -156,7 +156,7 @@ function drop($conn, $data)
         $query = 'DELETE FROM ' . $table_name . ' WHERE ID = ' . $ids;
     }
 
-    synchronise($conn, $table_name, $ids, $query, $data);
+    return synchronise($conn, $table_name, $ids, $query, $data);
 }
 
 function check_date($original_date)
