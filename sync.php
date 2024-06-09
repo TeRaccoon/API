@@ -29,10 +29,11 @@ class SyncInvoicedItems
         return $this->invoice_database->set_outstanding_balance($invoice_id, $outstanding_balance);
     }
 
-    function check_stock_availability($item_id, $quantity)
+    function check_stock_availability($item_id, $quantity, $invoiced_item_id = null)
     {
         $total_stock = $this->all_database->get_total_stock_by_id($item_id)['total_quantity'];
-        if ($total_stock < $quantity) {
+        $current_quantity = $invoiced_item_id == null ? 0 : $this->all_database->get_invoiced_item($invoiced_item_id)['quantity'];
+        if ($total_stock + $current_quantity < $quantity) {
             return array('success' => false, 'message' => 'There is insufficient stock for this operation!');
         }
 
@@ -72,7 +73,7 @@ class SyncInvoicedItems
         $invoice_id = $this->invoice_database->get_invoice_id_from_invoiced_item_id($id)[0];
         $customer_id = $this->invoice_database->get_invoice($invoice_id)['customer_id'];
 
-        $in_stock = $this->check_stock_availability($item_id, $quantity);
+        $in_stock = $this->check_stock_availability($item_id, $quantity, $id);
         if ($in_stock !== true) {
             return $in_stock;
         }
@@ -143,7 +144,8 @@ class SyncInvoicedItems
         $stock_key_data = $this->all_database->get_stock_key_data_from_invoiced_item_id($invoiced_item_id);
         $stock_key_data = array_key_exists('id', $stock_key_data) ? [$stock_key_data] : $stock_key_data;
 
-        foreach ($stock_key_data as $stock) {
+        foreach ($stock_key_data as $stock)
+        {
             $response[] = $this->all_database->revert_stock_key_from_id($stock['stock_id'], $stock['quantity']);
         }
         $response[] = $this->all_database->delete_stock_key_from_stock_id($invoiced_item_id);
@@ -171,8 +173,6 @@ class SyncCustomerPayments
 
     function sync_customer_payments_insert($id, $amount, $invoice_id, $status)
     {
-        //TODO: Customer outstanding balance
-
         $customer_id = $this->invoice_database->get_customer_id($invoice_id);
         $invoice_outstanding_balance = $this->invoice_database->get_total($invoice_id)[0];
         
@@ -202,14 +202,18 @@ class SyncCustomerPayments
     function sync_customer_payments_append($id, $amount, $invoice_id, $status)
     {
         $customer_id = $this->invoice_database->get_customer_id($invoice_id);
-        $invoice_outstanding_balance = $this->invoice_database->get_total($invoice_id)[0];
+        $invoice_outstanding_balance = $this->invoice_database->get_invoice($invoice_id)['outstanding_balance'];
         $customer_outstanding_balance = $this->customer_database->get_outstanding_balance($customer_id);
 
         $old_payment = $this->customer_payments_database->get_payment_data($id)['amount'];
-        $excess = $this->customer_payments_database->get_excess_payment($id)['amount'];
+        $excess = $this->customer_payments_database->get_excess_payment($id);
+        $excess = array_key_exists('amount', $excess) ? $excess['amount'] : 0;
 
-        $response[] = $this->invoice_database->update_outstanding_balance($invoice_outstanding_balance + $old_payment, $invoice_id);
-        $response[] = $this->customer_database->update_outstanding_balance($customer_outstanding_balance + $old_payment - $excess, $customer_id);
+        $invoice_outstanding_balance = $invoice_outstanding_balance + $old_payment - $excess;
+        $customer_outstanding_balance = $customer_outstanding_balance + $old_payment - $excess;
+
+        $response[] = $this->invoice_database->update_outstanding_balance($invoice_outstanding_balance, $invoice_id);
+        $response[] = $this->customer_database->update_outstanding_balance($customer_outstanding_balance, $customer_id);
 
         $response[] = $this->customer_payments_database->remove_linked_payment($id);
 
@@ -217,6 +221,76 @@ class SyncCustomerPayments
             return array('success' => false, 'message' => 'Failed to revert payment. Please verify the integrity of payments!');
         }
 
-        return $this->sync_customer_payments_insert($id, $amount, $invoice_id, $status);
+
+        $new_invoice_outstanding_balance = $invoice_outstanding_balance - $amount;
+
+        $response[] = $this->invoice_database->update_outstanding_balance($new_invoice_outstanding_balance < 0 ? 0 : $new_invoice_outstanding_balance, $invoice_id);
+        if ($amount >= $invoice_outstanding_balance) 
+        {
+            $response[] = $this->invoice_database->set_invoice_payment_status($invoice_id, 'Yes');
+        } 
+        else 
+        {
+            $response[] = $this->invoice_database->set_invoice_payment_status($invoice_id, 'No');
+        }
+
+        if ($new_invoice_outstanding_balance < 0)
+        {
+            $excess = $amount - $invoice_outstanding_balance;
+            $reference = "Credit from payment $id for invoice $invoice_id";
+            $response[] = $this->customer_payments_database->create_excess_payment($excess, $reference, $invoice_id, $status, $id);
+        }
+
+        $new_customer_outstanding_balance = $customer_outstanding_balance - $amount;
+        $response[] = $this->customer_database->update_outstanding_balance($new_customer_outstanding_balance, $customer_id);
+
+        return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue syncing this payment! Please verify the integrity of the payments!')
+        :
+        array('success' => true, 'message' => 'Customer payment appended successfully!');
+    }
+
+    function sync_customer_payments_drop($id, $query_string)
+    {
+        $invoice_id = $this->customer_payments_database->get_payment_data($id)['invoice_id'];
+        $customer_id = $this->invoice_database->get_customer_id($invoice_id);
+
+        $response[] = $this->sync_customer_outstanding_balance($id, $customer_id);
+        if (in_array(false, $this->sync_invoice_outstanding_balance($id, $invoice_id)))
+        {
+            return array('success' => false, 'message' => 'Failed to revert payment. Please verify the integrity of payments!');
+        }
+        
+        $response[] = $this->customer_payments_database->remove_linked_payment($id);
+        $response[] = $this->db_utility->execute_query($query_string, null, false);
+
+        return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue syncing this payment! Please verify the integrity of the payments!')
+        :
+        array('success' => true, 'message' => 'Customer payment appended successfully!');
+    }
+
+    function sync_invoice_outstanding_balance($id, $invoice_id)
+    {
+        $old_payment = $this->customer_payments_database->get_payment_data($id)['amount'];
+        $excess = $this->customer_payments_database->get_excess_payment($id);
+        $excess = array_key_exists('amount', $excess) ? $excess['amount'] : 0;
+
+        $invoice_outstanding_balance = $this->invoice_database->get_invoice($invoice_id)['outstanding_balance'];
+
+        $original_outstanding_balance = $invoice_outstanding_balance + $old_payment - $excess;
+
+        $response[] = $this->invoice_database->set_invoice_payment_status($invoice_id, 'No');
+        $response[] = $this->invoice_database->update_outstanding_balance($original_outstanding_balance, $invoice_id);
+
+        return $response;
+    }
+
+    function sync_customer_outstanding_balance($id, $customer_id)
+    {
+        $old_payment = $this->customer_payments_database->get_payment_data($id)['amount'];
+        
+        $outstanding_balance = $this->customer_database->get_outstanding_balance($customer_id);
+        $new_outstanding_balance = $outstanding_balance + $old_payment;
+        
+        return $this->customer_database->update_outstanding_balance($new_outstanding_balance, $customer_id);
     }
 }

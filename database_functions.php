@@ -68,6 +68,15 @@ class AllDatabases
         $this->db_utility = $db_utility;
     }
 
+    public function get_invoiced_item($id)
+    {
+        $query = 'SELECT * FROM invoiced_items WHERE id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
     public function get_next_supplier_account_code($table_name)
     {
         $query = 'ANALYZE TABLE suppliers';
@@ -1144,6 +1153,15 @@ class CustomerPaymentsDatabase
         $payment_data = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $payment_data;
     }
+    public function get_total_payment_data($payment_id)
+    {
+        $query = 'SELECT SUM(amount) AS total FROM customer_payments WHERE id = ? OR linked_payment_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $payment_id],
+            ['type' => 'i', 'value' => $payment_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'array');
+    }
     public function create_excess_payment($amount, $reference, $invoice_id, $status, $payment_id)
     {
         $query = 'INSERT INTO customer_payments (`amount`, `reference`, `invoice_id`, `type`, `status`, `linked_payment_id`) VALUES (?, ?, ?, "Credit", ?, ?)';
@@ -2037,7 +2055,7 @@ class InvoiceDatabase
 
     public function get_total($invoice_id)
     {
-        $query = 'SELECT total FROM invoices WHERE id = ?';
+        $query = 'SELECT outstanding_balance FROM invoices WHERE id = ?';
         $params = [
             ['type' => 'i', 'value' => $invoice_id]
         ];
