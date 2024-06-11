@@ -1493,6 +1493,7 @@ class InvoiceDatabase
         SUM(
             invoiced_items.quantity *
             CASE
+                WHEN price_list.price IS NOT NULL THEN price_list.price
                 WHEN customers.customer_type = "Retail" THEN items.retail_price
                 WHEN customers.customer_type = "Wholesale" THEN items.wholesale_price
             END *
@@ -1514,6 +1515,8 @@ class InvoiceDatabase
         invoices ON invoiced_items.invoice_id = invoices.id
     JOIN
         customers ON invoices.customer_id = customers.id
+    LEFT JOIN
+        price_list ON price_list.customer_id = customers.id AND price_list.item_id = items.id
     WHERE
         invoices.id = ?';
     
