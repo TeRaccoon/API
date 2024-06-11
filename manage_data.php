@@ -97,9 +97,7 @@ function insert($conn, $database_utility, $data)
     $submitted_data = construct_submitted_data($database_utility, $field_names, $table_name, $data);
     $query = $database_utility->construct_insert_query($table_name, $field_names, $submitted_data, $data);
 
-    $conn->query($query);
-
-    return synchronise($conn, $table_name, null, null, $data);
+    return synchronise($conn, $table_name, null, $query, $data);
 }
 function append($conn, $database_utility, $user_database, $customer_database, $data)
 {
@@ -172,6 +170,7 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
     $database_utility = new DatabaseUtility($conn);
 
     $action = $_POST['action'];
+    $query_ran = false;
 
     if ($id == null) {
         $id = get_row_contents($conn, "SELECT auto_increment from information_schema.tables WHERE table_name = '" . $table_name . "' AND table_schema = DATABASE()")[0][0] - 1;
@@ -192,10 +191,11 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
         default:
             $conn->query($query_string);
             $response = array('success' => true, 'message' => 'Record actioned successfully', 'id' => $id[0]);
-                break;
+            $query_ran = true;
+            break;
     }
 
-    if ($query_string != null && ($response === true || is_array($response) && array_key_exists('success', $response) && $response['success'] === true)) {
+    if ($query_string != null && ($response === true || is_array($response) && array_key_exists('success', $response) && $response['success'] === true) && !$query_ran) {
         $conn->query($query_string);
     }
 
