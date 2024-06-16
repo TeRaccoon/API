@@ -79,7 +79,7 @@ if (isset($data['action'])) {
     $database->close_connection();
     exit();
 } else {
-    echo("ERROR: Inconclusive call! Please contact administrator!" . "other" . "E_SQL-MD-001");
+    echo("ERROR: Inconclusive call! Please contact the administrator!" . "other" . "E_SQL-MD-001");
     exit();
 }
 
