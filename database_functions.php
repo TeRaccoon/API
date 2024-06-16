@@ -431,9 +431,9 @@ class AllDatabases
         return $data;
     }
 
-    function get_supplier_id_names()
+    function get_supplier_id_name_code()
     {
-        $query = 'SELECT id, account_name AS replacement FROM suppliers';
+        $query = 'SELECT id, CONCAT(account_name, " - ", account_code) AS replacement FROM suppliers';
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
@@ -1503,6 +1503,7 @@ class InvoiceDatabase
         SUM(
             invoiced_items.quantity *
             CASE
+                WHEN price_list.price IS NOT NULL THEN price_list.price
                 WHEN customers.customer_type = "Retail" THEN items.retail_price
                 WHEN customers.customer_type = "Wholesale" THEN items.wholesale_price
             END

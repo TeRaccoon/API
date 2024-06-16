@@ -258,8 +258,8 @@ function run_query() {
             $results = $all_databases->get_retail_item_id_names();
             break;
 
-        case "supplier_id_name":
-            $results = $all_databases->get_supplier_id_names();
+        case "supplier_id_name_code":
+            $results = $all_databases->get_supplier_id_name_code();
             break;
 
         case "invoice_id_title":
