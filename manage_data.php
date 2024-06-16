@@ -37,17 +37,14 @@ if (isset($data['action'])) {
     switch ($data['action']) {
         case 'add':
             $response = insert($database, $database_utility, $data);
-            // $response = array('success' => true, 'message' => 'Record added successfully');
             break;
 
         case 'append':
             $response = append($database, $database_utility, $user_database, $customer_database, $data);
-            // $response = array('success' => true, 'message' => 'Record appended successfully');
             break;
 
         case 'delete':
             $response = drop($database, $data);
-            // $response = array('success' => true, 'message' => 'Record dropped successfully');
             break;
 
         case 'login':
