@@ -138,8 +138,8 @@ function run_query() {
             $results = $customer_database->get_new_customers();
             break;
 
-        case "next-invoice-id":
-            $results = $invoice_database->get_next_invoice_id($filter);
+        case "next-id":
+            $results = $all_databases->get_next_id($filter);
             break;
 
         case "next-supplier-account-code":
@@ -196,6 +196,10 @@ function run_query() {
 
         case "stocked-item-images":
             $results = $items_database->get_images_from_stocked_items();
+            break;
+
+        case 'last-purchase-price':
+            $results = $items_database->get_last_purchase_price($filter);
             break;
 
         case "invoice-info":
@@ -303,7 +307,8 @@ function run_query() {
             break;
 
         case "stocked-items-invoice":
-            $results = $items_database->get_stock_from_invoice_id($filter);
+            $id = urldecode($_GET['id']) ?? $filter;
+            $results = $items_database->get_stock_from_invoice_id($id);
             break;
 
         case "invoiced-items-basic-ids":

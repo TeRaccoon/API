@@ -68,6 +68,16 @@ class AllDatabases
         $this->db_utility = $db_utility;
     }
 
+    public function get_next_id($table_name)
+    {
+        $query = 'ANALYZE TABLE ' . $table_name;
+        $this->db_utility->execute_query($query, null, false);
+
+        $query = 'SELECT AUTO_INCREMENT AS next_id FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $table_name . '"';
+        $next_id = $this->db_utility->execute_query($query, null, 'assoc-array')['next_id'];
+        return $next_id;
+    }
+
     public function get_invoiced_item($id)
     {
         $query = 'SELECT * FROM invoiced_items WHERE id = ?';
@@ -933,6 +943,8 @@ class ItemDatabase
     {
         $query = 'SELECT
         si.id,
+        si.purchase_price,
+        si.purchase_date,
         items.item_name,
         items.image_file_name,
         si.quantity,
@@ -946,7 +958,7 @@ class ItemDatabase
         items
       ON
         items.id = si.item_id
-      INNER JOIN
+      LEFT JOIN
         warehouse AS wh
       ON
         si.warehouse_id = wh.id
@@ -1012,6 +1024,16 @@ class ItemDatabase
 
         $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $item_data;
+    }
+
+    function get_last_purchase_price($item_id)
+    {
+        $query = 'SELECT purchase_price FROM stocked_items WHERE purchase_date = (SELECT MAX(purchase_date) FROM stocked_items) AND item_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+
+        return $this->db_utility->execute_query($query, $params, 'array'); 
     }
 
     function get_least_purchased_item()
@@ -1624,16 +1646,6 @@ class InvoiceDatabase
 
         $warehouse_id = $this->db_utility->execute_query($query, $params, 'assoc-array')['warehouse_id'];
         return $warehouse_id;
-    }
-
-    public function get_next_invoice_id($table_name)
-    {
-        $query = 'ANALYZE TABLE invoices';
-        $this->db_utility->execute_query($query, null, false);
-
-        $query = 'SELECT AUTO_INCREMENT AS next_id FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $table_name . '"';
-        $next_id = $this->db_utility->execute_query($query, null, 'assoc-array')['next_id'];
-        return $next_id;
     }
 
     public function get_invoiced_items_from_id($invoice_id, $complex)

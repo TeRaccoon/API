@@ -95,7 +95,7 @@ class SyncInvoicedItems
 
         return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!')
             :
-            array('success' => true, 'message' => 'Invoiced item added successfully!');
+            array('success' => true, 'message' => 'Invoiced item appended successfully!');
     }
 
     function sync_invoiced_items_delete($id, $query_string)
@@ -116,7 +116,7 @@ class SyncInvoicedItems
 
         return in_array(false, $response) ? array('success' => false, 'message' => 'There was an issue updating this stock! Please verify the integrity of the stock data!')
             :
-            array('success' => true, 'message' => 'Invoiced item added successfully!');
+            array('success' => true, 'message' => 'Invoiced item dropped successfully!');
     }
 
     function update_stock_and_keys_from_stock_data($stock_data, $required_quantity, $id)
