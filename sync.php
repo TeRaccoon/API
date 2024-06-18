@@ -1,5 +1,7 @@
 <?php
 
+namespace App\sync;
+
 require_once 'cors_config.php';
 
 require_once 'dbh.php';
