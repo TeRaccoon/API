@@ -943,10 +943,10 @@ class ItemDatabase
     {
         $query = 'SELECT
         si.id,
-        si.purchase_price,
-        si.purchase_date,
         items.item_name,
         items.image_file_name,
+        si.purchase_price,
+        si.purchase_date,
         si.quantity,
         si.expiry_date,
         si.packing_format,
@@ -2006,6 +2006,29 @@ class InvoiceDatabase
             ['type' => 'i', 'value' => $year],
             ['type' => 'i', 'value' => $dayStart],
             ['type' => 'i', 'value' => $dayEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_recurring_customers_day($dayStart, $dayEnd, $month, $year)
+    {
+        $query = 'SELECT * FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) WHERE EXTRACT(MONTH FROM ii.created_at) = ? AND EXTRACT(YEAR FROM ii.created_at) = ? AND DAY(ii.created_at) BETWEEN ? AND ? GROUP BY i.id ORDER BY total DESC LIMIT 5';
+        $params = [
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $dayStart],
+            ['type' => 'i', 'value' => $dayEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_recurring_customers_month($monthStart, $monthEnd, $year)
+    {
+        $query = 'SELECT * FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) WHERE EXTRACT(YEAR FROM ii.created_at) = ? AND EXTRACT(MONTH FROM ii.created_at) BETWEEN ? AND ? GROUP BY i.id ORDER BY total DESC LIMIT 5';
+        $params = [
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $monthStart],
+            ['type' => 'i', 'value' => $monthEnd]
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
