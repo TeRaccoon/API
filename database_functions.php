@@ -68,6 +68,16 @@ class AllDatabases
         $this->db_utility = $db_utility;
     }
 
+    public function get_next_id($table_name)
+    {
+        $query = 'ANALYZE TABLE ' . $table_name;
+        $this->db_utility->execute_query($query, null, false);
+
+        $query = 'SELECT AUTO_INCREMENT AS next_id FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $table_name . '"';
+        $next_id = $this->db_utility->execute_query($query, null, 'assoc-array')['next_id'];
+        return $next_id;
+    }
+
     public function get_invoiced_item($id)
     {
         $query = 'SELECT * FROM invoiced_items WHERE id = ?';
@@ -935,6 +945,8 @@ class ItemDatabase
         si.id,
         items.item_name,
         items.image_file_name,
+        si.purchase_price,
+        si.purchase_date,
         si.quantity,
         si.expiry_date,
         si.packing_format,
@@ -946,7 +958,7 @@ class ItemDatabase
         items
       ON
         items.id = si.item_id
-      INNER JOIN
+      LEFT JOIN
         warehouse AS wh
       ON
         si.warehouse_id = wh.id
@@ -1012,6 +1024,16 @@ class ItemDatabase
 
         $item_data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $item_data;
+    }
+
+    function get_last_purchase_price($item_id)
+    {
+        $query = 'SELECT purchase_price FROM stocked_items WHERE purchase_date = (SELECT MAX(purchase_date) FROM stocked_items) AND item_id = ?';
+        $params = [
+            ['type' => 'i', 'value' => $item_id]
+        ];
+
+        return $this->db_utility->execute_query($query, $params, 'array'); 
     }
 
     function get_least_purchased_item()
@@ -1626,16 +1648,6 @@ class InvoiceDatabase
         return $warehouse_id;
     }
 
-    public function get_next_invoice_id($table_name)
-    {
-        $query = 'ANALYZE TABLE invoices';
-        $this->db_utility->execute_query($query, null, false);
-
-        $query = 'SELECT AUTO_INCREMENT AS next_id FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $table_name . '"';
-        $next_id = $this->db_utility->execute_query($query, null, 'assoc-array')['next_id'];
-        return $next_id;
-    }
-
     public function get_invoiced_items_from_id($invoice_id, $complex)
     {
         if ($complex)
@@ -1994,6 +2006,29 @@ class InvoiceDatabase
             ['type' => 'i', 'value' => $year],
             ['type' => 'i', 'value' => $dayStart],
             ['type' => 'i', 'value' => $dayEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_recurring_customers_day($dayStart, $dayEnd, $month, $year)
+    {
+        $query = 'SELECT * FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) WHERE EXTRACT(MONTH FROM ii.created_at) = ? AND EXTRACT(YEAR FROM ii.created_at) = ? AND DAY(ii.created_at) BETWEEN ? AND ? GROUP BY i.id ORDER BY total DESC LIMIT 5';
+        $params = [
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $dayStart],
+            ['type' => 'i', 'value' => $dayEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_recurring_customers_month($monthStart, $monthEnd, $year)
+    {
+        $query = 'SELECT * FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) WHERE EXTRACT(YEAR FROM ii.created_at) = ? AND EXTRACT(MONTH FROM ii.created_at) BETWEEN ? AND ? GROUP BY i.id ORDER BY total DESC LIMIT 5';
+        $params = [
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $monthStart],
+            ['type' => 'i', 'value' => $monthEnd]
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }

@@ -37,17 +37,14 @@ if (isset($data['action'])) {
     switch ($data['action']) {
         case 'add':
             $response = insert($database, $database_utility, $data);
-            // $response = array('success' => true, 'message' => 'Record added successfully');
             break;
 
         case 'append':
             $response = append($database, $database_utility, $user_database, $customer_database, $data);
-            // $response = array('success' => true, 'message' => 'Record appended successfully');
             break;
 
         case 'delete':
             $response = drop($database, $data);
-            // $response = array('success' => true, 'message' => 'Record dropped successfully');
             break;
 
         case 'login':
@@ -181,6 +178,7 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
     $response = true;
     switch ($table_name) {
         case 'invoiced_items':
+            $query_ran = $action != 'delete';
             $response = sync_invoiced_items($conn, $database_utility, $id[0], $action, $data, $query_string);
             break;
 
@@ -195,7 +193,7 @@ function synchronise($conn, $table_name, $id, $query_string, $data)
             break;
     }
 
-    if ($query_string != null && ($response === true || is_array($response) && array_key_exists('success', $response) && $response['success'] === true) && !$query_ran) {
+    if (!$query_ran) {
         $conn->query($query_string);
     }
 
@@ -215,11 +213,11 @@ function sync_invoiced_items($conn, $database_utility, $id, $action, $data, $que
     switch ($action) {
         case "add":
             $conn->query($query_string);
-            return $invoiced_items_sync->sync_invoiced_items_insert($id, $data['item_id'], $data['quantity']);
+            return $invoiced_items_sync->sync_invoiced_items_insert($id + 1, $data['item_id'], $data['quantity']);
 
         case "append":
             $conn->query($query_string);
-            return $invoiced_items_sync->sync_invoiced_items_append($id, $data['item_id'], $data['quantity']);
+            return $invoiced_items_sync->sync_invoiced_items_append($id + 1, $data['item_id'], $data['quantity']);
 
         case "delete":
             return $invoiced_items_sync->sync_invoiced_items_delete($id, $query_string);
