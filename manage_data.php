@@ -93,7 +93,7 @@ function insert($conn, $database_utility, $data)
     $field_names = get_field_names($conn, $table_name);
     $submitted_data = construct_submitted_data($database_utility, $field_names, $table_name, $data);
     $query = $database_utility->construct_insert_query($table_name, $field_names, $submitted_data, $data);
-
+    echo $query;
     return synchronise($conn, $table_name, null, $query, $data);
 }
 function append($conn, $database_utility, $user_database, $customer_database, $data)

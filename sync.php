@@ -15,12 +15,12 @@ class SyncInvoicedItems
     private $all_database;
     private $customer_database;
 
-    public function __construct($db_utility, $invoice_database, $all_database)
+    public function __construct($db_utility, $invoice_database, $all_database, $customer_database)
     {
         $this->db_utility = $db_utility;
         $this->invoice_database = $invoice_database;
         $this->all_database = $all_database;
-        $this->customer_database = new CustomerDatabase($db_utility);
+        $this->customer_database = $customer_database;
     }
 
     function sync_invoice_outstanding_balance($invoice_id, $invoice_total)
