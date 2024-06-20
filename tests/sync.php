@@ -2,10 +2,11 @@
 
 use App\sync\SyncInvoicedItems;
 
-require_once 'dbh.php';
+require_once 'tests/test_dbh.php';
 require_once 'database_functions.php';
 require_once 'database_utility.php';
 require_once 'sync.php';
+require_once 'manage_data.php';
 
 class sync extends \PHPUnit\Framework\TestCase {
     private $invoiced_items_sync;
