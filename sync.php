@@ -33,7 +33,7 @@ class SyncInvoicedItems
     {
         $total_stock = $this->all_database->get_total_stock_by_id($item_id)['total_quantity'];
         $current_quantity = $invoiced_item_id == null ? 0 : $this->all_database->get_invoiced_item($invoiced_item_id)['quantity'];
-        if ($total_stock + $current_quantity < $quantity) {
+        if ($total_stock + $current_quantity <= $quantity) {
             return array('success' => false, 'message' => 'There is insufficient stock for this operation!');
         }
 
@@ -51,7 +51,7 @@ class SyncInvoicedItems
         }
 
         $stock_data = $this->all_database->get_stock_data_from_item_id($item_id);
-        $stock_data = is_array($stock_data) ? $stock_data : [$stock_data];
+        $stock_data = key_exists(0, $stock_data) ? $stock_data : [$stock_data];
 
         $response[] = $this->update_stock_and_keys_from_stock_data($stock_data, $quantity, $id);
 
@@ -70,6 +70,7 @@ class SyncInvoicedItems
 
     function sync_invoiced_items_append($id, $item_id, $quantity)
     {
+        echo $id;
         $invoice_id = $this->invoice_database->get_invoice_id_from_invoiced_item_id($id)[0];
         $customer_id = $this->invoice_database->get_invoice($invoice_id)['customer_id'];
 
@@ -81,7 +82,7 @@ class SyncInvoicedItems
         $response[] = $this->revert_stock_key($id);
 
         $stock_data = $this->all_database->get_stock_data_from_item_id($item_id);
-        $stock_data = is_array($stock_data) ? $stock_data : [$stock_data];
+        $stock_data = key_exists(0, $stock_data) ? $stock_data : [$stock_data];
 
         $response[] = $this->update_stock_and_keys_from_stock_data($stock_data, $quantity, $id);
         

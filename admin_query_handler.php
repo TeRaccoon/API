@@ -141,6 +141,21 @@ function run_query() {
             $results = $invoice_database->get_recurring_customers_month($monthStart, $monthEnd, $year);
             break;
 
+        case 'non-recurring-customers-day':
+            $dayStart = urldecode($_GET['dayStart']);
+            $dayEnd = urldecode($_GET['dayEnd']);
+            $month = urldecode($_GET['month']);
+            $year = urldecode($_GET['year']);
+            $results = $invoice_database->get_non_recurring_customers_day($dayStart, $dayEnd, $month, $year);
+            break;
+
+        case 'non-recurring-customers-month':
+            $monthStart = urldecode($_GET['monthStart']);
+            $monthEnd = urldecode($_GET['monthEnd']);
+            $year = urldecode($_GET['year']);
+            $results = $invoice_database->get_non_recurring_customers_month($monthStart, $monthEnd, $year);
+            break;
+
         case 'invoices-due-today':
             $results = $invoice_database->get_invoices_due_today();
             break;

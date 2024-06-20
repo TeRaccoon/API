@@ -1871,6 +1871,46 @@ class InvoiceDatabase
         return $creditor_data;
     }
 
+    public function get_vat_data($startDate, $endDate)
+    {
+        $query = 'SELECT 
+        COALESCE(SUM(output_total), 0) AS output_total, 
+        COALESCE(SUM(output_vat), 0) AS output_vat, 
+        COALESCE(SUM(input_total), 0) AS input_total, 
+        COALESCE(SUM(input_vat), 0) AS input_vat
+    FROM (
+        SELECT 
+            COALESCE(SUM(total), 0) AS output_total, 
+            COALESCE(SUM(vat), 0) AS output_vat, 
+            0 AS input_total, 
+            0 AS input_vat 
+        FROM 
+            invoices 
+        WHERE 
+            created_at >= ? 
+            AND created_at <= ? 
+            AND payment_status = "Yes"
+        UNION ALL
+        SELECT 
+            0 AS output_total, 
+            0 AS output_vat, 
+            COALESCE(SUM(total), 0) AS input_total, 
+            COALESCE(SUM(vat), 0) AS input_vat 
+        FROM 
+            payments 
+        WHERE 
+            date >= ? 
+            AND date <= ?
+    ) AS combined_data';
+        $params = [
+            ['type' => 's', 'value' => $startDate],
+            ['type' => 's', 'value' => $endDate],
+            ['type' => 's', 'value' => $startDate],
+            ['type' => 's', 'value' => $endDate],
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
     public function get_total_invoices_month()
     {
         $query = 'SELECT COUNT(*) AS count FROM invoices WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())';
@@ -1935,46 +1975,6 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_vat_data($startDate, $endDate)
-    {
-        $query = 'SELECT 
-        COALESCE(SUM(output_total), 0) AS output_total, 
-        COALESCE(SUM(output_vat), 0) AS output_vat, 
-        COALESCE(SUM(input_total), 0) AS input_total, 
-        COALESCE(SUM(input_vat), 0) AS input_vat
-    FROM (
-        SELECT 
-            COALESCE(SUM(total), 0) AS output_total, 
-            COALESCE(SUM(vat), 0) AS output_vat, 
-            0 AS input_total, 
-            0 AS input_vat 
-        FROM 
-            invoices 
-        WHERE 
-            created_at >= ? 
-            AND created_at <= ? 
-            AND payment_status = "Yes"
-        UNION ALL
-        SELECT 
-            0 AS output_total, 
-            0 AS output_vat, 
-            COALESCE(SUM(total), 0) AS input_total, 
-            COALESCE(SUM(vat), 0) AS input_vat 
-        FROM 
-            payments 
-        WHERE 
-            date >= ? 
-            AND date <= ?
-    ) AS combined_data';
-        $params = [
-            ['type' => 's', 'value' => $startDate],
-            ['type' => 's', 'value' => $endDate],
-            ['type' => 's', 'value' => $startDate],
-            ['type' => 's', 'value' => $endDate],
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-
     public function get_average_invoice_value_per_day($dayStart, $dayEnd, $month, $year)
     {
         $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, SUM(total) / COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
@@ -2000,7 +2000,7 @@ class InvoiceDatabase
 
     public function get_top_selling_item_per_day($dayStart, $dayEnd, $month, $year)
     {
-        $query = 'SELECT i.item_name AS dateKey, SUM(ii.quantity) AS total FROM invoiced_items AS ii JOIN items i ON ii.item_id = i.id WHERE EXTRACT(MONTH FROM ii.created_at) = ? AND EXTRACT(YEAR FROM ii.created_at) = ? AND DAY(ii.created_at) BETWEEN ? AND ? GROUP BY i.id ORDER BY total DESC LIMIT 5';
+        $query = 'SELECT i.item_name AS dateKey, SUM(ii.quantity) AS total FROM invoiced_items AS ii JOIN items i ON ii.item_id = i.id WHERE EXTRACT(MONTH FROM ii.created_at) = ? AND EXTRACT(YEAR FROM ii.created_at) = ? AND DAY(ii.created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY COUNT(*) DESC LIMIT 5';
         $params = [
             ['type' => 'i', 'value' => $month],
             ['type' => 'i', 'value' => $year],
@@ -2012,7 +2012,7 @@ class InvoiceDatabase
 
     public function get_recurring_customers_day($dayStart, $dayEnd, $month, $year)
     {
-        $query = 'SELECT * FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) WHERE EXTRACT(MONTH FROM ii.created_at) = ? AND EXTRACT(YEAR FROM ii.created_at) = ? AND DAY(ii.created_at) BETWEEN ? AND ? GROUP BY i.id ORDER BY total DESC LIMIT 5';
+        $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) AND EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY COUNT(*) DESC LIMIT 5';
         $params = [
             ['type' => 'i', 'value' => $month],
             ['type' => 'i', 'value' => $year],
@@ -2024,7 +2024,30 @@ class InvoiceDatabase
 
     public function get_recurring_customers_month($monthStart, $monthEnd, $year)
     {
-        $query = 'SELECT * FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) WHERE EXTRACT(YEAR FROM ii.created_at) = ? AND EXTRACT(MONTH FROM ii.created_at) BETWEEN ? AND ? GROUP BY i.id ORDER BY total DESC LIMIT 5';
+        $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY id ORDER BY total DESC LIMIT 5';
+        $params = [
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $monthStart],
+            ['type' => 'i', 'value' => $monthEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+
+    public function get_non_recurring_customers_day($dayStart, $dayEnd, $month, $year)
+    {
+        $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) = 1) AND EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY COUNT(*) DESC LIMIT 5';
+        $params = [
+            ['type' => 'i', 'value' => $month],
+            ['type' => 'i', 'value' => $year],
+            ['type' => 'i', 'value' => $dayStart],
+            ['type' => 'i', 'value' => $dayEnd]
+        ];
+        return $this->db_utility->execute_query($query, $params, 'assoc-array');
+    }
+    
+    public function get_non_recurring_customers_month($monthStart, $monthEnd, $year)
+    {
+        $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) = 1) WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY id ORDER BY total DESC LIMIT 5';
         $params = [
             ['type' => 'i', 'value' => $year],
             ['type' => 'i', 'value' => $monthStart],
