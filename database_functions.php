@@ -2000,7 +2000,7 @@ class InvoiceDatabase
 
     public function get_top_selling_item_per_day($dayStart, $dayEnd, $month, $year)
     {
-        $query = 'SELECT i.item_name AS dateKey, SUM(ii.quantity) AS total FROM invoiced_items AS ii JOIN items i ON ii.item_id = i.id WHERE EXTRACT(MONTH FROM ii.created_at) = ? AND EXTRACT(YEAR FROM ii.created_at) = ? AND DAY(ii.created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY COUNT(*) DESC LIMIT 5';
+        $query = 'SELECT i.item_name AS dateKey, SUM(ii.quantity) AS total FROM invoiced_items AS ii JOIN items i ON ii.item_id = i.id WHERE EXTRACT(MONTH FROM ii.created_at) = ? AND EXTRACT(YEAR FROM ii.created_at) = ? AND DAY(ii.created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY total DESC LIMIT 5';
         $params = [
             ['type' => 'i', 'value' => $month],
             ['type' => 'i', 'value' => $year],
