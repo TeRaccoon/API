@@ -1918,29 +1918,6 @@ class InvoiceDatabase
         return $invoice_count;
     }
 
-    public function get_total_invoices_per_month($monthStart, $monthEnd, $year)
-    {
-        $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
-        $params = [
-            ['type' => 'i', 'value' => $year],
-            ['type' => 'i', 'value' => $monthStart],
-            ['type' => 'i', 'value' => $monthEnd]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-
-    public function get_total_invoices_per_day($dayStart, $dayEnd, $month, $year)
-    {
-        $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
-        $params = [
-            ['type' => 'i', 'value' => $month],
-            ['type' => 'i', 'value' => $year],
-            ['type' => 'i', 'value' => $dayStart],
-            ['type' => 'i', 'value' => $dayEnd]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-
     public function get_total_invoice_value_per_month($monthStart, $monthEnd, $year)
     {
         $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, SUM(total) AS total FROM invoices WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
@@ -1964,18 +1941,7 @@ class InvoiceDatabase
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
 
-    public function get_average_invoice_value_per_month($monthStart, $monthEnd, $year)
-    {
-        $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, SUM(total) / COUNT(*) AS total FROM invoices WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
-        $params = [
-            ['type' => 'i', 'value' => $year],
-            ['type' => 'i', 'value' => $monthStart],
-            ['type' => 'i', 'value' => $monthEnd]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-
-    public function get_average_invoice_value_per_day($dayStart, $dayEnd, $month, $year)
+    public function get_average_invoice_value_per_report($dayStart, $dayEnd, $month, $year)
     {
         $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, SUM(total) / COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
         $params = [
@@ -2132,5 +2098,203 @@ class InvoiceDatabase
             ['type' => 'i', 'value' => $invoice_id]
         ];
         return $this->db_utility->execute_query($query, $params, false);
+    }
+}
+
+class Statistics {
+    private $db_utility;
+
+    public function __construct($db_utility)
+    {
+        $this->db_utility = $db_utility;
+    }
+
+    private function get_date_condition($start, $end, $year, $groupBy, $month = null, $tableKey = 'i') 
+    {
+        if ($groupBy === 'day') {
+            $dateExtractFunction = "EXTRACT(DAY FROM $tableKey.created_at)";
+            $dateCondition = "EXTRACT(MONTH FROM $tableKey.created_at) = ? AND DAY($tableKey.created_at) BETWEEN ? AND ?";
+            $params = [
+                ['type' => 'i', 'value' => $year],
+                ['type' => 'i', 'value' => $month],
+                ['type' => 'i', 'value' => $start],
+                ['type' => 'i', 'value' => $end]
+            ];
+        } else {
+            $dateExtractFunction = 'EXTRACT(MONTH FROM i.created_at)';
+            $dateCondition = 'EXTRACT(MONTH FROM i.created_at) BETWEEN ? AND ?';
+            $params = [
+                ['type' => 'i', 'value' => $year],
+                ['type' => 'i', 'value' => $start],
+                ['type' => 'i', 'value' => $end]
+            ];
+        }
+        return [
+            'params' => $params,
+            'extract_function' => $dateExtractFunction,
+            'condition' => $dateCondition
+        ];
+    }
+
+    public function get_average_invoice_value($start, $end, $year, $groupBy, $month = null)
+    {
+        $date_condition = $this->get_date_condition($start, $end, $year, $groupBy, $month);
+        $params = $date_condition['params'];
+        $extract_function = $date_condition['extract_function'];
+        $condition = $date_condition['condition'];
+
+        $chart_query = "SELECT $extract_function AS dateKey, SUM(total) / COUNT(*) AS total FROM invoices AS i WHERE EXTRACT(YEAR FROM created_at) = ? AND $condition GROUP BY dateKey ORDER BY dateKey";
+        $report_query = "SELECT 
+            $extract_function AS dateKey, 
+            SUM(total) AS total, 
+            SUM(gross_value) + SUM(vat) - SUM(total) AS discounts, 
+            COUNT(*) AS orders, 
+            SUM(total) / COUNT(*) AS average 
+        FROM invoices AS i
+        WHERE 
+            EXTRACT(YEAR FROM created_at) = ? AND $condition
+        GROUP BY dateKey 
+        ORDER BY dateKey";
+
+        $chart = $this->db_utility->execute_query($chart_query, $params, 'assoc-array');
+            
+        $report = $this->db_utility->execute_query($report_query, $params, 'assoc-array');
+
+        return [
+            'chart' => $chart,
+            'report' => $report
+        ];
+    }
+
+    public function get_total_invoices($start, $end, $year, $groupBy, $month = null)
+    {
+        $date_condition = $this->get_date_condition($start, $end, $year, $groupBy, $month);
+        $params = $date_condition['params'];
+        $extract_function = $date_condition['extract_function'];
+        $condition = $date_condition['condition'];
+
+        $chart_query = "SELECT $extract_function AS dateKey, COUNT(*) AS total FROM invoices i WHERE EXTRACT(YEAR FROM i.created_at) = ? AND $condition GROUP BY dateKey ORDER BY dateKey";
+    
+        $report_query = "SELECT 
+            $extract_function AS dateKey, 
+            COUNT(i.id) AS total_orders, 
+            COUNT(ii.id) / COUNT(i.id) AS average_units_ordered, 
+            SUM(i.total) / COUNT(i.id) AS average_order_value
+        FROM 
+            invoices AS i
+        INNER JOIN 
+            invoiced_items AS ii ON ii.invoice_id = i.id
+        WHERE 
+            EXTRACT(YEAR FROM i.created_at) = ? AND $condition
+        GROUP BY 
+            dateKey 
+        ORDER BY 
+            dateKey";
+    
+        $chart = $this->db_utility->execute_query($chart_query, $params, 'assoc-array');
+    
+        $report = $this->db_utility->execute_query($report_query, $params, 'assoc-array');
+    
+        return [
+            'chart' => $chart,
+            'report' => $report
+        ];
+    }
+
+    public function get_top_selling_products($start, $end, $year, $groupBy, $month = null)
+    {
+        $date_condition = $this->get_date_condition($start, $end, $year, $groupBy, $month);
+        $params = $date_condition['params'];
+        $condition = $date_condition['condition'];
+
+        $chart_query = "SELECT items.item_name AS dateKey, SUM(i.quantity) AS total FROM invoiced_items AS i JOIN items AS items ON i.item_id = items.id WHERE EXTRACT(YEAR FROM i.created_at) = ? AND $condition GROUP BY dateKey ORDER BY total DESC LIMIT 5";
+
+        $report_query = "SELECT
+            items.item_name AS 'key',
+            items.brand AS brand,
+            items.category AS category,
+            SUM(i.quantity) AS net_quantity,
+            SUM(
+                i.quantity * 
+                (CASE
+                    WHEN cpl.price IS NOT NULL THEN cpl.price
+                    ELSE
+                        CASE
+                            WHEN c.customer_type = 'Wholesale' THEN items.wholesale_price
+                            ELSE items.retail_price
+                        END
+                END)
+            ) AS gross_sales_before_discounts,
+            SUM(
+                i.quantity * 
+                (CASE
+                    WHEN cpl.price IS NOT NULL THEN cpl.price
+                    ELSE
+                        CASE
+                            WHEN c.customer_type = 'Wholesale' THEN items.wholesale_price
+                            ELSE items.retail_price
+                        END
+                END) * (i.discount / 100.0 + c.discount / 100.0 - (i.discount / 100.0) * (c.discount / 100.0))
+            ) AS total_discount,
+            SUM(
+                i.quantity * 
+                (CASE
+                    WHEN cpl.price IS NOT NULL THEN cpl.price
+                    ELSE
+                        CASE
+                            WHEN c.customer_type = 'Wholesale' THEN items.wholesale_price
+                            ELSE items.retail_price
+                        END
+                END) * (1 - i.discount / 100.0) * (1 - c.discount / 100.0)
+            ) AS net_sales,
+            SUM(
+                i.quantity * 
+                (CASE
+                    WHEN cpl.price IS NOT NULL THEN cpl.price
+                    ELSE
+                        CASE
+                            WHEN c.customer_type = 'Wholesale' THEN items.wholesale_price
+                            ELSE items.retail_price
+                        END
+                END) * (1 - i.discount / 100.0) * (1 - c.discount / 100.0) * 0.20
+            ) AS vat,
+            SUM(
+                i.quantity * 
+                (CASE
+                    WHEN cpl.price IS NOT NULL THEN cpl.price
+                    ELSE
+                        CASE
+                            WHEN c.customer_type = 'Wholesale' THEN items.wholesale_price
+                            ELSE items.retail_price
+                        END
+                END) * (1 - i.discount / 100.0) * (1 - c.discount / 100.0) * 1.20
+            ) AS total_sales
+        FROM
+            invoiced_items i
+        LEFT JOIN
+            items AS items ON items.id = i.item_id
+        LEFT JOIN
+            invoices AS inv ON i.invoice_id = inv.id
+        LEFT JOIN
+            customers c ON inv.customer_id = c.id
+        LEFT JOIN
+            price_list cpl ON cpl.customer_id = c.id AND cpl.item_id = i.item_id
+        WHERE
+            EXTRACT(YEAR FROM i.created_at) = ? AND $condition 
+        GROUP BY 
+            items.item_name,
+            items.brand,
+            items.category,
+            c.customer_type
+        ORDER BY 
+            net_sales DESC";    
+
+        $chart = $this->db_utility->execute_query($chart_query, $params, 'assoc-array');
+        $report = $this->db_utility->execute_query($report_query, $params, 'assoc-array');
+
+        return [
+            'chart' => $chart,
+            'report' => $report
+        ];
     }
 }
