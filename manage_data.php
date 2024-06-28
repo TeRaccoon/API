@@ -33,6 +33,7 @@ if (isset($data['action'])) {
     $database_utility = new DatabaseUtility($database);
     $user_database = new UserDatabase($database_utility);
     $customer_database = new CustomerDatabase($database_utility);
+    $product_database = new ItemDatabase($database_utility);
 
     switch ($data['action']) {
         case 'add':
@@ -48,7 +49,10 @@ if (isset($data['action'])) {
             break;
 
         case 'login':
-            login($user_database, $data);
+            $login_response = login($user_database, $data);
+            if($login_response['success']) {
+                $this->startup($product_database);
+            }
             break;
 
         case 'customer-login':
@@ -336,6 +340,10 @@ function login($user_database, $data)
 
     echo json_encode($response);
     exit();
+}
+
+function startup($product_database) {
+    $expired_items_sync = 
 }
 
 function customer_login($customer_database, $data) {

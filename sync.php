@@ -294,3 +294,21 @@ class SyncCustomerPayments
         return $this->customer_database->update_outstanding_balance($new_outstanding_balance, $customer_id);
     }
 }
+
+class SyncExpiredItems 
+{
+    private $db_utility;
+    private $item_database;
+
+    public function __construct($db_utility, $item_database)
+    {
+        $this->db_utility = $db_utility;
+        $this->item_database = $item_database;
+    }
+
+    public function sync_expired_items()
+    {
+       $expired_item = $this->item_database->get_all_expired_items();
+       
+    }
+}

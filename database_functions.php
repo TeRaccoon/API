@@ -1412,6 +1412,12 @@ class RetailItemsDatabase
         $product = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $product;
     }
+
+    public function get_all_expired_items() 
+    {
+        $query = 'SELECT si.id, SUM( FROM stocked_items AS si WHERE (curdate()) > expiry_date';
+        return $this->db_utility->execute_query($query, null, 'assoc-array');
+    }
 }
 
 class ImageLocationsDatabase
