@@ -80,7 +80,7 @@ function run_query() {
             $monthStart = urldecode($_GET['monthStart']);
             $monthEnd = urldecode($_GET['monthEnd']);
             $year = urldecode($_GET['year']);
-            $results = $invoice_database->get_total_invoice_value_per_month($monthStart, $monthEnd, $year);
+            $results = $statistics->get_total_invoice_value($monthStart, $monthEnd, $year, 'month');
             break;
 
         case 'total-invoice-value-per-day':
@@ -88,7 +88,7 @@ function run_query() {
             $dayEnd = urldecode($_GET['dayEnd']);
             $month = urldecode($_GET['month']);
             $year = urldecode($_GET['year']);
-            $results = $invoice_database->get_total_invoice_value_per_day($dayStart, $dayEnd, $month, $year);
+            $results = $statistics->get_total_invoice_value($dayStart, $dayEnd, $year, 'day', $month);
             break;
 
         case 'vat-data':
@@ -132,14 +132,14 @@ function run_query() {
             $dayEnd = urldecode($_GET['dayEnd']);
             $month = urldecode($_GET['month']);
             $year = urldecode($_GET['year']);
-            $results = $invoice_database->get_recurring_customers_day($dayStart, $dayEnd, $month, $year);
+            $results = $statistics->get_recurring_customers($dayStart, $dayEnd, $year, 'day', $month);
             break;
 
         case 'recurring-customers-month':
             $monthStart = urldecode($_GET['monthStart']);
             $monthEnd = urldecode($_GET['monthEnd']);
             $year = urldecode($_GET['year']);
-            $results = $invoice_database->get_recurring_customers_month($monthStart, $monthEnd, $year);
+            $results = $statistics->get_recurring_customers($monthStart, $monthEnd, $year, 'month');
             break;
 
         case 'non-recurring-customers-day':
@@ -147,14 +147,14 @@ function run_query() {
             $dayEnd = urldecode($_GET['dayEnd']);
             $month = urldecode($_GET['month']);
             $year = urldecode($_GET['year']);
-            $results = $invoice_database->get_non_recurring_customers_day($dayStart, $dayEnd, $month, $year);
+            $results = $statistics->get_non_recurring_customers($dayStart, $dayEnd, $year, 'day', $month);
             break;
 
         case 'non-recurring-customers-month':
             $monthStart = urldecode($_GET['monthStart']);
             $monthEnd = urldecode($_GET['monthEnd']);
             $year = urldecode($_GET['year']);
-            $results = $invoice_database->get_non_recurring_customers_month($monthStart, $monthEnd, $year);
+            $results = $statistics->get_non_recurring_customers($monthStart, $monthEnd, $year, 'month');
             break;
 
         case 'invoices-due-today':

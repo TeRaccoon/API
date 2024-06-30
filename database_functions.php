@@ -1918,29 +1918,6 @@ class InvoiceDatabase
         return $invoice_count;
     }
 
-    public function get_total_invoice_value_per_month($monthStart, $monthEnd, $year)
-    {
-        $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, SUM(total) AS total FROM invoices WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
-        $params = [
-            ['type' => 'i', 'value' => $year],
-            ['type' => 'i', 'value' => $monthStart],
-            ['type' => 'i', 'value' => $monthEnd]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-
-    public function get_total_invoice_value_per_day($dayStart, $dayEnd, $month, $year)
-    {
-        $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, SUM(total) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
-        $params = [
-            ['type' => 'i', 'value' => $month],
-            ['type' => 'i', 'value' => $year],
-            ['type' => 'i', 'value' => $dayStart],
-            ['type' => 'i', 'value' => $dayEnd]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-
     public function get_average_invoice_value_per_report($dayStart, $dayEnd, $month, $year)
     {
         $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, SUM(total) / COUNT(*) AS total FROM invoices WHERE EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY dateKey';
@@ -1972,52 +1949,6 @@ class InvoiceDatabase
             ['type' => 'i', 'value' => $year],
             ['type' => 'i', 'value' => $dayStart],
             ['type' => 'i', 'value' => $dayEnd]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-
-    public function get_recurring_customers_day($dayStart, $dayEnd, $month, $year)
-    {
-        $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) AND EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY COUNT(*) DESC LIMIT 5';
-        $params = [
-            ['type' => 'i', 'value' => $month],
-            ['type' => 'i', 'value' => $year],
-            ['type' => 'i', 'value' => $dayStart],
-            ['type' => 'i', 'value' => $dayEnd]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-
-    public function get_recurring_customers_month($monthStart, $monthEnd, $year)
-    {
-        $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY id ORDER BY total DESC LIMIT 5';
-        $params = [
-            ['type' => 'i', 'value' => $year],
-            ['type' => 'i', 'value' => $monthStart],
-            ['type' => 'i', 'value' => $monthEnd]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-
-    public function get_non_recurring_customers_day($dayStart, $dayEnd, $month, $year)
-    {
-        $query = 'SELECT EXTRACT(DAY FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) = 1) AND EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ? AND DAY(created_at) BETWEEN ? AND ? GROUP BY dateKey ORDER BY COUNT(*) DESC LIMIT 5';
-        $params = [
-            ['type' => 'i', 'value' => $month],
-            ['type' => 'i', 'value' => $year],
-            ['type' => 'i', 'value' => $dayStart],
-            ['type' => 'i', 'value' => $dayEnd]
-        ];
-        return $this->db_utility->execute_query($query, $params, 'assoc-array');
-    }
-    
-    public function get_non_recurring_customers_month($monthStart, $monthEnd, $year)
-    {
-        $query = 'SELECT EXTRACT(MONTH FROM created_at) AS dateKey, COUNT(*) AS total FROM invoices WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) = 1) WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(MONTH FROM created_at) BETWEEN ? AND ? GROUP BY id ORDER BY total DESC LIMIT 5';
-        $params = [
-            ['type' => 'i', 'value' => $year],
-            ['type' => 'i', 'value' => $monthStart],
-            ['type' => 'i', 'value' => $monthEnd]
         ];
         return $this->db_utility->execute_query($query, $params, 'assoc-array');
     }
@@ -2288,6 +2219,64 @@ class Statistics {
             c.customer_type
         ORDER BY 
             net_sales DESC";    
+
+        $chart = $this->db_utility->execute_query($chart_query, $params, 'assoc-array');
+        $report = $this->db_utility->execute_query($report_query, $params, 'assoc-array');
+
+        return [
+            'chart' => $chart,
+            'report' => $report
+        ];
+    }
+
+    public function get_recurring_customers($start, $end, $year, $groupBy, $month = null)
+    {
+        $date_condition = $this->get_date_condition($start, $end, $year, $groupBy, $month);
+        $params = $date_condition['params'];
+        $extract_function = $date_condition['extract_function'];
+        $condition = $date_condition['condition'];
+
+        $chart_query = "SELECT $extract_function AS dateKey, COUNT(id) AS total FROM invoices AS i WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) AND EXTRACT(YEAR FROM i.created_at) = ? AND $condition GROUP BY dateKey ORDER BY dateKey";
+
+        $report_query = "SELECT $extract_function AS dateKey, COUNT(id) AS total FROM invoices AS i WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(*) > 1) AND EXTRACT(YEAR FROM i.created_at) = ? AND $condition GROUP BY dateKey ORDER BY dateKey";
+
+        $chart = $this->db_utility->execute_query($chart_query, $params, 'assoc-array');
+        $report = $this->db_utility->execute_query($report_query, $params, 'assoc-array');
+
+        return [
+            'chart' => $chart,
+            'report' => $report
+        ];
+    }
+
+    public function get_non_recurring_customers($start, $end, $year, $groupBy, $month = null)
+    {
+        $date_condition = $this->get_date_condition($start, $end, $year, $groupBy, $month);
+        $params = $date_condition['params'];
+        $extract_function = $date_condition['extract_function'];
+        $condition = $date_condition['condition'];
+
+        $chart_query = "SELECT $extract_function AS dateKey, COUNT(id) AS total FROM invoices AS i WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(id) = 1) AND EXTRACT(YEAR FROM created_at) = ? AND $condition GROUP BY dateKey";
+        $report_query = "SELECT $extract_function AS dateKey, COUNT(id) AS total FROM invoices AS i WHERE customer_id IN (SELECT customer_id FROM invoices GROUP BY customer_id HAVING COUNT(id) = 1) AND EXTRACT(YEAR FROM created_at) = ? AND $condition GROUP BY dateKey";
+
+        $chart = $this->db_utility->execute_query($chart_query, $params, 'assoc-array');
+        $report = $this->db_utility->execute_query($report_query, $params, 'assoc-array');
+
+        return [
+            'chart' => $chart,
+            'report' => $report
+        ];
+    }
+
+    public function get_total_invoice_value($start, $end, $year, $groupBy, $month = null)
+    {
+        $date_condition = $this->get_date_condition($start, $end, $year, $groupBy, $month);
+        $params = $date_condition['params'];
+        $extract_function = $date_condition['extract_function'];
+        $condition = $date_condition['condition'];
+
+        $chart_query = "SELECT $extract_function AS dateKey, SUM(total) AS total FROM invoices AS i WHERE EXTRACT(YEAR FROM i.created_at) = ? AND $condition GROUP BY dateKey ORDER BY dateKey";
+        $report_query = "SELECT $extract_function AS dateKey, COUNT(id) AS total_orders, (SUM(total) + SUM(VAT) - SUM(gross_value)) AS discounts, SUM(gross_value) AS net, SUM(VAT) AS tax, SUM(total) AS total FROM invoices AS i WHERE EXTRACT(YEAR FROM i.created_at) = ? AND $condition GROUP BY dateKey ORDER BY dateKey";
 
         $chart = $this->db_utility->execute_query($chart_query, $params, 'assoc-array');
         $report = $this->db_utility->execute_query($report_query, $params, 'assoc-array');
