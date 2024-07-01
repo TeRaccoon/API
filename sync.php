@@ -300,16 +300,38 @@ class SyncExpiredItems
 {
     private $db_utility;
     private $item_database;
+    private $payments_database;
 
-    public function __construct($db_utility, $item_database)
+    public function __construct($db_utility, $item_database, $payments_database)
     {
         $this->db_utility = $db_utility;
         $this->item_database = $item_database;
+        $this->payments_database = $payments_database;
     }
 
     public function sync_expired_items()
     {
-       $expired_item = $this->item_database->get_all_expired_items();
-       
+        $expired_items = $this->item_database->get_all_expired_items();
+        $response[] = $this->item_database->set_all_expired_items();
+        var_dump($expired_items);
+        if ($expired_items != null)
+        {
+            $payment_type = 'Other';
+            $category = 'Damages';
+
+            foreach ($expired_items as $item)
+            {
+                $barcode = $item['barcode'];
+
+                $amount = $item['amount'];
+                $item_name = $item['name'];
+                $description = "Damages for expired item: $item_name of barcode: $barcode";
+                $reference = '';
+                $total = $amount * 0.8;
+                $vat = $amount * 0.2;
+                $response[] = $this->payments_database->insert_payment($amount, $payment_type, $category, $description, $reference, $total, $vat);
+            }
+        }
+        return $response;
     }
 }

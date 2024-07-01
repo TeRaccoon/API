@@ -1147,6 +1147,60 @@ class ItemDatabase
         $data = $this->db_utility->execute_query($query, null, 'assoc-array');
         return $data;
     }
+
+    public function get_all_expired_items() 
+    {
+        $query = 'SELECT si.purchase_price * si.quantity AS amount, i.item_name AS name, si.barcode AS barcode FROM stocked_items AS si INNER JOIN items AS i ON si.item_id = i.id WHERE (curdate()) > si.expiry_date';
+        return $this->db_utility->execute_query($query, null, 'assoc-array');
+    }
+
+    public function set_all_expired_items() 
+    {
+        $query = 'UPDATE stocked_items SET expired = "Yes" WHERE (curdate()) > expiry_date';
+        return $this->db_utility->execute_query($query, null, null);
+    }
+
+    public function insert_expired_items($item_id, $quantity, $warehouse_id, $expiry_date, $purchase_price, $purchase_date, $barcode, $packing_format, $supplier_invoice_id)
+    {
+        $query = 'INSERT INTO expired_items (`item_id`, `quantity`, `warehouse_id`, `expiry_date`, `purchase_price`, `purchase_date`, `barcode`, `packing_format`, `supplier_invoice_id`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        $params = [
+            ['type' => 'i', 'value' => $item_id],
+            ['type' => 'i', 'value' => $quantity],
+            ['type' => 'i', 'value' => $warehouse_id],
+            ['type' => 's', 'value' => $expiry_date],
+            ['type' => 'i', 'value' => $purchase_price],
+            ['type' => 's', 'value' => $purchase_date],
+            ['type' => 's', 'value' => $barcode],
+            ['type' => 's', 'value' => $packing_format],
+            ['type' => 'i', 'value' => $supplier_invoice_id]
+        ];
+        return $this->db_utility->execute_query($query, $params, null);
+    }
+}
+
+class PaymentsDatabase
+{
+    private $db_utility;
+
+    public function __construct($db_utility)
+    {
+        $this->db_utility = $db_utility;
+    }
+
+    public function insert_payment($amount, $payment_type, $category, $description, $reference, $total, $vat)
+    {
+        $query = 'INSERT INTO payments (amount, payment_type, category, description, reference, total, vat) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        $params = [
+            ['type' => 'd', 'value' => $amount],
+            ['type' => 's', 'value' => $payment_type],
+            ['type' => 's', 'value' => $category],
+            ['type' => 's', 'value' => $description],
+            ['type' => 's', 'value' => $reference],
+            ['type' => 'd', 'value' => $total],
+            ['type' => 'd', 'value' => $vat],
+        ];
+        return $this->db_utility->execute_query($query, $params, null);
+    }
 }
 
 class CustomerPaymentsDatabase
@@ -1411,12 +1465,6 @@ class RetailItemsDatabase
         ];
         $product = $this->db_utility->execute_query($query, $params, 'assoc-array');
         return $product;
-    }
-
-    public function get_all_expired_items() 
-    {
-        $query = 'SELECT si.id, SUM( FROM stocked_items AS si WHERE (curdate()) > expiry_date';
-        return $this->db_utility->execute_query($query, null, 'assoc-array');
     }
 }
 

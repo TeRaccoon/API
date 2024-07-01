@@ -51,7 +51,17 @@ if (isset($data['action'])) {
         case 'login':
             $login_response = login($user_database, $data);
             if($login_response['success']) {
-                $this->startup($product_database);
+                if (startup($database_utility))
+                {
+                    $database->commit();
+                }
+            }
+            break;
+
+        case 'startup':
+            if (startup($database_utility))
+            {
+                $database->commit();
             }
             break;
 
@@ -342,8 +352,10 @@ function login($user_database, $data)
     exit();
 }
 
-function startup($product_database) {
-    $expired_items_sync = 
+function startup($database_utility) {
+    $expired_items_sync = new SyncExpiredItems($database_utility, new ItemDatabase($database_utility), new PaymentsDatabase($database_utility));
+    $response = $expired_items_sync->sync_expired_items();
+    return !in_array(false, $response);
 }
 
 function customer_login($customer_database, $data) {
